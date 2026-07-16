@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TGC BET 計算機</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iMzgiIGZpbGw9IiMwZDMzMjAiLz4KPHJlY3QgeD0iODYiIHk9IjM4IiB3aWR0aD0iNSIgaGVpZ2h0PSI4NiIgcng9IjIiIGZpbGw9IiNkNGFmMzciLz4KPHBhdGggZD0iTTkxIDQyIEwxMzggNTQgTDkxIDY2IFoiIGZpbGw9IiNkNGFmMzciLz4KPGVsbGlwc2UgY3g9Ijg4IiBjeT0iMTI2IiByeD0iMzQiIHJ5PSIxMCIgZmlsbD0iIzAwMCIgb3BhY2l0eT0iMC40NSIvPgo8Y2lyY2xlIGN4PSIxMTYiIGN5PSIxMjAiIHI9IjEzIiBmaWxsPSIjZjVmMGU4Ii8+Cjx0ZXh0IHg9IjkwIiB5PSIxNTgiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLHNlcmlmIiBmb250LXNpemU9IjIwIiBmaWxsPSIjZDRhZjM3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+VEdDIEJFVDwvdGV4dD4KPC9zdmc+">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iMzgiIGZpbGw9IiMwZDMzMjAiLz4KPHJlY3QgeD0iODYiIHk9IjM4IiB3aWR0aD0iNSIgaGVpZ2h0PSI4NiIgcng9IjIiIGZpbGw9IiNkNGFmMzciLz4KPHBhdGggZD0iTTkxIDQyIEwxMzggNTQgTDkxIDY2IFoiIGZpbGw9IiNkNGFmMzciLz4KPGVsbGlwc2UgY3g9Ijg4IiBjeT0iMTI2IiByeD0iMzQiIHJ5PSIxMCIgZmlsbD0iIzAwMCIgb3BhY2l0eT0iMC40NSIvPgo8Y2lyY2xlIGN4PSIxMTYiIGN5PSIxMjAiIHI9IjEzIiBmaWxsPSIjZjVmMGU4Ii8+Cjx0ZXh0IHg9IjkwIiB5PSIxNTgiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLHNlcmlmIiBmb250LXNpemU9IjIwIiBmaWxsPSIjZDRhZjM3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+VEdDIEJFVDwvdGV4dD4KPC9zdmc+">
+<meta name="theme-color" content="#0d3320">
+<meta name="apple-mobile-web-app-title" content="TGC BET">
+<style>
+  * { -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; padding:0; background:#0d3320; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+  input[type=number] { -moz-appearance:textfield; }
+  #errbar { display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999;
+    background:#7f1d1d; color:#fff; font-size:11px; padding:6px 10px; font-family:sans-serif; }
+</style>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+  (function(){
+    var _warn = console.warn;
+    console.warn = function(){
+      var msg = arguments[0];
+      if (typeof msg === "string" && msg.indexOf("in-browser Babel transformer") !== -1) return;
+      return _warn.apply(console, arguments);
+    };
+    window.addEventListener("error", function(e){
+      var bar=document.getElementById("errbar");
+      if(bar){ bar.style.display="block"; bar.textContent="⚠️ エラー: "+(e.message||"不明")+" — この表示を開発者に伝えてください"; }
+    });
+  })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<div id="errbar"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo } = React;
+
+
+/* ════════════ コースデータ（東京ゴルフ倶楽部） ════════════ */
+const COURSE = {
+  OUT: [
+    {hole:1,par:4,hdcp:13},{hole:2,par:4,hdcp:3},{hole:3,par:5,hdcp:9},
+    {hole:4,par:3,hdcp:17},{hole:5,par:5,hdcp:7},{hole:6,par:4,hdcp:1},
+    {hole:7,par:4,hdcp:5},{hole:8,par:3,hdcp:15},{hole:9,par:4,hdcp:11},
+  ],
+  IN: [
+    {hole:10,par:4,hdcp:6},{hole:11,par:4,hdcp:10},{hole:12,par:3,hdcp:14},
+    {hole:13,par:5,hdcp:2},{hole:14,par:4,hdcp:8},{hole:15,par:5,hdcp:18},
+    {hole:16,par:4,hdcp:4},{hole:17,par:3,hdcp:16},{hole:18,par:4,hdcp:12},
+  ],
+};
+const PLAYER_KEYS = ["A","B","C","D"];
+const MATCHUP_PAIRS = [["A","B"],["A","C"],["A","D"],["B","C"],["B","D"],["C","D"]];
+/* ナッソー: 各18Hは 前ハーフ1pt / 後ハーフ2pt / 18Hトータル1pt（2ラウンド目も同構成） */
+const HALF_DEFS = [
+  {id:"half1",label:"ハーフ1",pt:1},
+  {id:"half2",label:"ハーフ2",pt:2},
+  {id:"half3",label:"ハーフ3",pt:1},
+  {id:"half4",label:"ハーフ4",pt:2},
+];
+
+/* ════════════ 純粋計算ロジック ════════════ */
+function strokesForHole(diff, hdcp){
+  const h = parseInt(diff)||0;
+  if(h<=0) return 0;
+  return Math.floor(h/18) + (h%18>=hdcp?1:0);
+}
+/* 2人間ネット（個人HCP差方式・マッチプレー標準） */
+function pairNets(gX,gY,hX,hY,hdcp){
+  const d=Math.abs(hX-hY);
+  let sX=0,sY=0;
+  if(hX>hY) sX=strokesForHole(d,hdcp);
+  else if(hY>hX) sY=strokesForHole(d,hdcp);
+  return [gX-sX, gY-sY];
+}
+/* 個人ベスト（全勝制）: 有効スコアの他全員にネットで勝つ */
+function bestWinner(gross,hcps,hdcp){
+  const valid=PLAYER_KEYS.filter(pk=>gross[pk]!==undefined);
+  if(valid.length<2) return null;
+  for(const X of valid){
+    let all=true;
+    for(const Y of valid){
+      if(X===Y) continue;
+      const [nX,nY]=pairNets(gross[X],gross[Y],hcps[X],hcps[Y],hdcp);
+      if(!(nX<nY)){ all=false; break; }
+    }
+    if(all) return X;
+  }
+  return null;
+}
+/* イモ（全敗制）: 有効スコアの他全員にネットで負ける */
+function imoWinner(gross,hcps,hdcp){
+  const valid=PLAYER_KEYS.filter(pk=>gross[pk]!==undefined);
+  if(valid.length<2) return null;
+  for(const X of valid){
+    let all=true;
+    for(const Y of valid){
+      if(X===Y) continue;
+      const [nX,nY]=pairNets(gross[X],gross[Y],hcps[X],hcps[Y],hdcp);
+      if(!(nX>nY)){ all=false; break; }
+    }
+    if(all) return X;
+  }
+  return null;
+}
+/* チーム編成: 自動=HCP最小×最大（同点は登録順）／手動=3パターンから選択 */
+function determineTeams(players, pairing){
+  if(pairing==="AB") return { team1:["A","B"], team2:["C","D"] };
+  if(pairing==="AC") return { team1:["A","C"], team2:["B","D"] };
+  if(pairing==="AD") return { team1:["A","D"], team2:["B","C"] };
+  const srt=[...PLAYER_KEYS].sort((a,b)=>{
+    const ha=parseInt(players[a].hcp)||0, hb=parseInt(players[b].hcp)||0;
+    return ha-hb || PLAYER_KEYS.indexOf(a)-PLAYER_KEYS.indexOf(b);
+  });
+  return { team1:[srt[0],srt[3]], team2:[srt[1],srt[2]] };
+}
+function calcTeamHcp(players,team1,team2){
+  const s1=team1.reduce((s,pk)=>s+(parseInt(players[pk].hcp)||0),0);
+  const s2=team2.reduce((s,pk)=>s+(parseInt(players[pk].hcp)||0),0);
+  const diff=Math.abs(s1-s2);
+  const recv = s1>s2?1 : s2>s1?2 : 0;
+  return {sum1:s1,sum2:s2,diff,recv};
+}
+/* ベスト&グロス: 素のグロス、チームハンデのみ。
+   つけるか=コース全体HDCP<=差 / ベスト or グロス=ハーフ内順位の偶奇 */
+function teamHoleBG(g,team1,team2,diff,hdcp,halfRank,recv){
+  const v1=team1.map(pk=>g[pk]).filter(v=>v!==undefined);
+  const v2=team2.map(pk=>g[pk]).filter(v=>v!==undefined);
+  if(!v1.length||!v2.length) return {m1:null,m2:null};
+  const applies = diff>0 && hdcp<=diff;
+  const app = !applies?null:(halfRank%2===1?"best":"gross");
+  let b1=Math.min(...v1), b2=Math.min(...v2);
+  if(app==="best"&&recv){ if(recv===1)b1-=1; else b2-=1; }
+  const m1 = b1<b2?1:b1>b2?-1:0;
+  let m2=null;
+  if(v1.length===2&&v2.length===2){
+    let s1=v1[0]+v1[1], s2=v2[0]+v2[1];
+    if(app==="gross"&&recv){ if(recv===1)s1-=1; else s2-=1; }
+    m2 = s1<s2?1:s1>s2?-1:0;
+  }
+  return {m1,m2};
+}
+/* ハイ&ロー: ロー同士・ハイ同士を個人HCP差ネットで対戦 */
+function sortTeamByHcp(team,players){
+  return [...team].sort((a,b)=>{
+    const ha=parseInt(players[a].hcp)||0, hb=parseInt(players[b].hcp)||0;
+    return ha-hb || PLAYER_KEYS.indexOf(a)-PLAYER_KEYS.indexOf(b);
+  });
+}
+function teamHoleHL(g,team1,team2,players,hdcp){
+  const [lo1,hi1]=sortTeamByHcp(team1,players);
+  const [lo2,hi2]=sortTeamByHcp(team2,players);
+  const hcp=pk=>parseInt(players[pk].hcp)||0;
+  let m1=null,m2=null;
+  if(g[lo1]!==undefined&&g[lo2]!==undefined){
+    const [n1,n2]=pairNets(g[lo1],g[lo2],hcp(lo1),hcp(lo2),hdcp);
+    m1 = n1<n2?1:n1>n2?-1:0;
+  }
+  if(g[hi1]!==undefined&&g[hi2]!==undefined){
+    const [n1,n2]=pairNets(g[hi1],g[hi2],hcp(hi1),hcp(hi2),hdcp);
+    m2 = n1<n2?1:n1>n2?-1:0;
+  }
+  return {m1,m2};
+}
+/* ラスベガス: ネットで2桁（小が十の位）。ネット＝4人の最少HCP基準（差分をHDCP順に引く）。
+   バーディー（グロスのみで判定）で相手逆転、両方なら両方逆転。差は5切上げ */
+function vegasNet(g,pk,hcps,hdcp){
+  const minH=Math.min(...PLAYER_KEYS.map(k=>hcps[k]));
+  const d=hcps[pk]-minH;
+  return g[pk]-strokesForHole(d,hdcp);
+}
+function vegasHole(g,team1,team2,par,hcps,hdcp){
+  const all=[...team1,...team2];
+  if(all.some(pk=>g[pk]===undefined)) return null;
+  /* バーディーはグロスのみで判定 */
+  const b1=team1.some(pk=>g[pk]<=par-1);
+  const b2=team2.some(pk=>g[pk]<=par-1);
+  /* 数字はネット（最少HCP基準）で作る */
+  const v1=team1.map(pk=>vegasNet(g,pk,hcps,hdcp));
+  const v2=team2.map(pk=>vegasNet(g,pk,hcps,hdcp));
+  const mk=(arr,flip)=>{
+    const lo=Math.min(...arr), hi=Math.max(...arr);
+    return flip? hi*10+lo : lo*10+hi;
+  };
+  /* 片方だけバーディー→相手の数字が逆転 / 両方→両方逆転 */
+  const flip1 = (b2&&!b1) || (b1&&b2);
+  const flip2 = (b1&&!b2) || (b1&&b2);
+  const n1=mk(v1,flip1), n2=mk(v2,flip2);
+  const diff=Math.abs(n1-n2);
+  const pts = diff===0?0:Math.ceil(diff/5)*5;
+  const winner = n1<n2?1:n1>n2?-1:0;
+  return {n1,n2,pts,winner,b1,b2};
+}
+function sideFromWins(w1,w2){ return {w1,w2,winner:w1>w2?1:w1<w2?-1:0}; }
+
+/* ════════════ 全体計算（純関数） ════════════ */
+function computeAll(st){
+  const {players,halfConfig,scores,game,teamMode,rates,payMode,teamPairing}=st;
+  const hcps={}; PLAYER_KEYS.forEach(pk=>hcps[pk]=parseInt(players[pk].hcp)||0);
+  const {team1,team2}=determineTeams(players,teamPairing);
+  const thcp=calcTeamHcp(players,team1,team2);
+  const isTen = game==="tentwo";
+  const activeHalves = HALF_DEFS.filter(hd=>halfConfig[hd.id]);
+
+  const zero=()=>({A:0,B:0,C:0,D:0});
+  const cntBirdie=zero(),cntBest=zero(),cntImo=zero();
+  const bonusPts=zero(), strokePts=zero(), vegasPts=zero();
+  const strokePairs={}; MATCHUP_PAIRS.forEach(([a,b])=>strokePairs[a+b]=0);
+  const pairHoleWins={}; /* halfId -> pairKey -> array of 1/-1/0 */
+  const halves={};
+
+  activeHalves.forEach(hd=>{
+    const ct=halfConfig[hd.id];
+    const courseHoles = ct==="OUT"?COURSE.OUT:COURSE.IN;
+    const sc=scores[hd.id]||{};
+    const halfRank={};
+    [...courseHoles].sort((a,b)=>a.hdcp-b.hdcp).forEach((h,i)=>{halfRank[h.hole]=i+1;});
+    const teamRes={}, vegas={}, vsA={}, bestPk={}, imoPk={};
+    const grossTot=zero(); const grossCnt=zero();
+    pairHoleWins[hd.id]={}; MATCHUP_PAIRS.forEach(([a,b])=>pairHoleWins[hd.id][a+b]=[]);
+
+    courseHoles.forEach(h=>{
+      const g={};
+      PLAYER_KEYS.forEach(pk=>{
+        const v=parseInt(sc[h.hole]?.[pk]);
+        if(!isNaN(v)&&v>0){ g[pk]=v; grossTot[pk]+=v; grossCnt[pk]++; }
+      });
+      /* バーディー */
+      PLAYER_KEYS.forEach(pk=>{
+        if(g[pk]!==undefined && g[pk]<=h.par-1){
+          cntBirdie[pk]++;
+          bonusPts[pk]+=3;
+          PLAYER_KEYS.forEach(o=>{ if(o!==pk) bonusPts[o]-=1; });
+        }
+      });
+      /* ベスト（全勝制） */
+      const bw=bestWinner(g,hcps,h.hdcp);
+      if(bw){ bestPk[h.hole]=bw; cntBest[bw]++;
+        bonusPts[bw]+=3; PLAYER_KEYS.forEach(o=>{ if(o!==bw) bonusPts[o]-=1; });
+      }
+      /* イモ（全敗制・テントゥーのみ点数化） */
+      const iw=imoWinner(g,hcps,h.hdcp);
+      if(iw){ imoPk[h.hole]=iw;
+        if(isTen){ cntImo[iw]++;
+          bonusPts[iw]-=3; PLAYER_KEYS.forEach(o=>{ if(o!==iw) bonusPts[o]+=1; });
+        }
+      }
+      /* チーム戦 */
+      teamRes[h.hole] = teamMode==="highlow"
+        ? teamHoleHL(g,team1,team2,players,h.hdcp)
+        : teamHoleBG(g,team1,team2,thcp.diff,h.hdcp,halfRank[h.hole],thcp.recv);
+      /* ラスベガス */
+      if(isTen){
+        const vg=vegasHole(g,team1,team2,h.par,hcps,h.hdcp);
+        if(vg){
+          vegas[h.hole]=vg;
+          if(vg.winner!==0){
+            const winT=vg.winner===1?team1:team2, loseT=vg.winner===1?team2:team1;
+            winT.forEach(pk=>vegasPts[pk]+=vg.pts);
+            loseT.forEach(pk=>vegasPts[pk]-=vg.pts);
+          }
+        }
+      }
+      /* 個人ペア: ナッソー勝敗 & ストローク差 */
+      MATCHUP_PAIRS.forEach(([p1,p2])=>{
+        const key=p1+p2;
+        if(g[p1]!==undefined&&g[p2]!==undefined){
+          const [n1,n2]=pairNets(g[p1],g[p2],hcps[p1],hcps[p2],h.hdcp);
+          pairHoleWins[hd.id][key].push(n1<n2?1:n1>n2?-1:0);
+          if(isTen) strokePairs[key]+=(n2-n1); /* 正=p1勝ち */
+        } else {
+          pairHoleWins[hd.id][key].push(null);
+        }
+      });
+      /* 自分(A) vs 他3人 の当ホールネット差 */
+      const va={};
+      ["B","C","D"].forEach(o=>{
+        if(g.A!==undefined&&g[o]!==undefined){
+          const [nA,nO]=pairNets(g.A,g[o],hcps.A,hcps[o],h.hdcp);
+          va[o]=nO-nA; /* 正=自分勝ち */
+        }
+      });
+      vsA[h.hole]=va;
+    });
+
+    /* チームのハーフ勝敗: 2勝負の総勝ち数 */
+    let w1=0,w2=0,c1a=0,c1b=0,c2a=0,c2b=0;
+    courseHoles.forEach(h=>{
+      const r=teamRes[h.hole]; if(!r) return;
+      if(r.m1===1){w1++;c1a++;} else if(r.m1===-1){w2++;c2a++;}
+      if(r.m2===1){w1++;c1b++;} else if(r.m2===-1){w2++;c2b++;}
+    });
+    const teamSide={...sideFromWins(w1,w2), m1w1:c1a,m1w2:c2a,m2w1:c1b,m2w2:c2b};
+
+    /* 個人ペアのハーフ勝敗 */
+    const pairSides={};
+    MATCHUP_PAIRS.forEach(([p1,p2])=>{
+      const arr=pairHoleWins[hd.id][p1+p2].filter(v=>v!==null);
+      pairSides[p1+p2]=sideFromWins(arr.filter(v=>v===1).length, arr.filter(v=>v===-1).length);
+    });
+
+    halves[hd.id]={courseHoles,halfRank,teamRes,vegas,vsA,bestPk,imoPk,grossTot,grossCnt,teamSide,pairSides};
+  });
+
+  if(isTen){
+    MATCHUP_PAIRS.forEach(([p1,p2])=>{
+      const s=strokePairs[p1+p2];
+      strokePts[p1]+=s; strokePts[p2]-=s;
+    });
+  }
+
+  /* 18Hトータル（half1+2 / half3+4、両方アクティブ時のみ） */
+  const combineSide=(hids,key)=>{
+    const arr=[]; hids.forEach(hid=>{ if(pairHoleWins[hid]) arr.push(...pairHoleWins[hid][key].filter(v=>v!==null)); });
+    return sideFromWins(arr.filter(v=>v===1).length, arr.filter(v=>v===-1).length);
+  };
+  const frontActive = !!(halfConfig.half1&&halfConfig.half2);
+  const backActive  = !!(halfConfig.half3&&halfConfig.half4);
+
+  /* ナッソー・マッチアップ集計 */
+  const matchups={}; const nassauPts=zero();
+  MATCHUP_PAIRS.forEach(([p1,p2])=>{
+    const key=p1+p2; let pts=0; const detail=[];
+    activeHalves.forEach(hd=>{
+      const s=halves[hd.id].pairSides[key];
+      pts += hd.pt*s.winner;
+      detail.push({label:hd.label,pt:hd.pt,side:s});
+    });
+    if(frontActive){
+      const s=combineSide(["half1","half2"],key);
+      pts+=s.winner; detail.push({label:"前半18H",pt:1,side:s});
+    }
+    if(backActive){
+      const s=combineSide(["half3","half4"],key);
+      pts+=s.winner; detail.push({label:"後半18H",pt:1,side:s});
+    }
+    matchups[key]={pts,detail};
+    nassauPts[p1]+=pts; nassauPts[p2]-=pts;
+  });
+
+  /* 個人合計（点） */
+  const indivTen=zero();
+  PLAYER_KEYS.forEach(pk=>{
+    indivTen[pk] = nassauPts[pk]*payMode + bonusPts[pk] + (isTen? strokePts[pk]+vegasPts[pk] : 0);
+  });
+
+  /* チーム戦マネー */
+  const teamMoney=zero(); const lunch=[]; const halfMoney={};
+  activeHalves.forEach(hd=>{
+    const side=halves[hd.id].teamSide;
+    if(side.winner===0){ halfMoney[hd.id]={type:"draw"}; return; }
+    const winT=side.winner===1?team1:team2, loseT=side.winner===1?team2:team1;
+    const isLunch = hd.id==="half1" && (game==="fiveone" || rates.half1.type==="lunch");
+    if(isLunch){
+      lunch.push({half:hd.label,loser:loseT});
+      halfMoney[hd.id]={type:"lunch",loser:loseT,winner:winT};
+    } else {
+      const yen = hd.id==="half1" ? (parseInt(rates.half1.yen)||0) : (parseInt(rates[hd.id])||0);
+      winT.forEach(pk=>teamMoney[pk]+=yen*loseT.length);
+      loseT.forEach(pk=>teamMoney[pk]-=yen*winT.length);
+      halfMoney[hd.id]={type:"money",yen,loser:loseT,winner:winT};
+    }
+  });
+
+  /* 総合（円） */
+  const grand=zero();
+  PLAYER_KEYS.forEach(pk=>{ grand[pk]=indivTen[pk]*100+teamMoney[pk]; });
+
+  const myTeam = team1.includes("A")?1:2;
+  return {team1,team2,thcp,myTeam,halves,activeHalves,matchups,nassauPts,
+    cntBirdie,cntBest,cntImo,bonusPts,strokePairs,strokePts,vegasPts,
+    indivTen,teamMoney,lunch,halfMoney,grand,frontActive,backActive};
+}
+/* ===== React Component ===== */
+
+const GAME_DEFS={ fiveone:{label:"ファイブワン"}, tentwo:{label:"テントゥートゥーワン"} };
+const initPlayers = () => ({
+  A:{name:"自分",hcp:""},B:{name:"",hcp:""},C:{name:"",hcp:""},D:{name:"",hcp:""},
+});
+const initConfig  = () => ({ half1:"OUT", half2:"IN", half3:null, half4:null });
+const initRates   = () => ({ half1:{type:"lunch",yen:1000}, half2:1000, half3:1000, half4:1000 });
+const initScores  = () => ({ half1:{}, half2:{}, half3:{}, half4:{} });
+const STORAGE_KEY = "golf_games_v5";
+
+const SAMPLE_DATA = {
+  game:"tentwo", teamMode:"bestgross", payMode:5,
+  players:{A:{name:"渡瀬",hcp:"20"},B:{name:"野原",hcp:"11"},C:{name:"大木",hcp:"11"},D:{name:"鈴木",hcp:"21"}},
+  halfConfig:{half1:"OUT",half2:"IN",half3:null,half4:null},
+  rates:{half1:{type:"lunch",yen:1000},half2:500,half3:1000,half4:1000},
+  scores:{
+    half1:{"1":{A:"4",B:"4",C:"4",D:"4"},"2":{A:"6",B:"5",C:"6",D:"6"},"3":{A:"6",B:"5",C:"6",D:"8"},"4":{A:"4",B:"3",C:"3",D:"2"},"5":{A:"6",B:"6",C:"7",D:"7"},"6":{A:"6",B:"4",C:"5",D:"6"},"7":{A:"5",B:"4",C:"5",D:"5"},"8":{A:"3",B:"3",C:"4",D:"3"},"9":{A:"5",B:"5",C:"5",D:"6"}},
+    half2:{"10":{A:"4",B:"4",C:"5",D:"6"},"11":{A:"5",B:"7",C:"4",D:"5"},"12":{A:"3",B:"3",C:"4",D:"4"},"13":{A:"5",B:"5",C:"7",D:"8"},"14":{A:"7",B:"4",C:"6",D:"5"},"15":{A:"6",B:"6",C:"5",D:"7"},"16":{A:"8",B:"6",C:"4",D:"6"},"17":{A:"3",B:"3",C:"3",D:"4"},"18":{A:"8",B:"4",C:"5",D:"6"}},
+    half3:{}, half4:{},
+  },
+};
+
+const K=(v)=> v===1?"#4ade80":v===-1?"#f87171":v===0?"#94a3b8":"#3f5a48";
+const S=(v)=> v===1?"○":v===-1?"×":v===0?"ー":"";
+const sgn=(n)=> n>0?`+${n}`:`${n}`;
+const yen=(n)=> (n>=0?"+":"−")+"¥"+Math.abs(n).toLocaleString();
+
+function GolfNassau(){
+  const [game,setGame]           = useState("fiveone");
+  const [teamMode,setTeamMode]   = useState("bestgross");
+  const [teamPairing,setTeamPairing]=useState("auto");
+  const [players,setPlayers]     = useState(initPlayers);
+  const [halfConfig,setHalfConfig]=useState(initConfig);
+  const [rates,setRates]         = useState(initRates);
+  const [scores,setScores]       = useState(initScores);
+  const [payMode,setPayMode]     = useState(5);
+  const [tab,setTab]             = useState("setting");
+  const [msg,setMsg]             = useState("");
+  const [modal,setModal]         = useState(null);
+  const [jsonText,setJsonText]   = useState("");
+  const [confirmClear,setConfirmClear]=useState(null);
+  const [lastSaved,setLastSaved] = useState("");
+
+  const showMsg=(m)=>{ setMsg(m); setTimeout(()=>setMsg(""),2500); };
+
+  /* 読込（旧形式も移行） */
+  useEffect(()=>{
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const p=JSON.parse(raw);
+      applyData(p);
+      setLastSaved(new Date().toLocaleTimeString("ja-JP"));
+    }catch(e){}
+  },[]);
+  const applyData=(p)=>{
+    if(p.game) setGame(p.game);
+    if(p.teamMode) setTeamMode(p.teamMode);
+    if(p.teamPairing) setTeamPairing(p.teamPairing);
+    if(p.players) setPlayers(p.players);
+    if(p.halfConfig) setHalfConfig({half1:"OUT",half2:"IN",half3:null,half4:null,...p.halfConfig});
+    if(p.rates) setRates({...initRates(),...p.rates});
+    else if(p.tsuruRate){ /* 旧形式移行 */
+      const m={san:300,han:500,ichi:1000,ni:2000,yukichi:10000};
+      const conv=(v)=> typeof v==="number"?v:(m[v]||parseInt(v)||1000);
+      setRates({half1:{type:"lunch",yen:1000},
+        half2:conv(p.tsuruRate.half2),half3:conv(p.tsuruRate.half3),half4:conv(p.tsuruRate.half4)});
+    }
+    if(p.scores) setScores({half1:{},half2:{},half3:{},half4:{},...p.scores});
+    if(p.payMode) setPayMode(p.payMode);
+  };
+  /* 自動保存 */
+  useEffect(()=>{
+    try{
+      localStorage.setItem(STORAGE_KEY,JSON.stringify({game,teamMode,teamPairing,players,halfConfig,rates,scores,payMode}));
+      setLastSaved(new Date().toLocaleTimeString("ja-JP"));
+    }catch(e){}
+  },[game,teamMode,teamPairing,players,halfConfig,rates,scores,payMode]);
+
+  const C = useMemo(()=>computeAll({players,halfConfig,scores,game,teamMode,rates,payMode,teamPairing}),
+    [players,halfConfig,scores,game,teamMode,rates,payMode,teamPairing]);
+
+  const setScore=(halfId,hole,pk,val)=>{
+    setScores(prev=>({...prev,[halfId]:{...prev[halfId],[hole]:{...(prev[halfId]?.[hole]||{}),[pk]:val}}}));
+  };
+  const setHalf1=(ct)=>{ setHalfConfig(c=>({...c,half1:ct,half2:ct==="OUT"?"IN":"OUT"})); };
+  const setHalf3=(ct)=>{ setHalfConfig(c=>({...c,half3:ct,half4:c.half4?(ct==="OUT"?"IN":"OUT"):c.half4})); };
+
+  const handleExport=()=>{
+    try{
+      setJsonText(JSON.stringify({game,teamMode,teamPairing,players,halfConfig,rates,scores,payMode},null,2));
+      setModal("export"); showMsg("保存データを表示しました");
+    }catch(e){ showMsg("エラー: "+(e&&e.message||"不明")); }
+  };
+  const handleCopy=()=>{
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(jsonText).then(()=>showMsg("✓ コピーしました"),()=>showMsg("コピーできません。長押しで選択してください"));
+      } else {
+        const ta=document.querySelector("textarea"); if(ta){ta.removeAttribute("readonly");ta.select();document.execCommand("copy");ta.setAttribute("readonly","");showMsg("✓ コピーしました");}
+      }
+    }catch(e){ showMsg("コピーできません。長押しで選択してください"); }
+  };
+  const handleImport=()=>{ setJsonText(""); setModal("import"); };
+  const handleImportOK=()=>{
+    const raw=(jsonText||"").trim().replace(/^\uFEFF/,"");
+    if(!raw){ showMsg("テキストが空です"); return; }
+    let p;
+    try{ p=JSON.parse(raw); }catch(e){ showMsg("JSON形式が正しくありません"); return; }
+    try{ applyData(p); setModal(null); showMsg("✓ 読み込みました"); }
+    catch(e){ showMsg("読込エラー: "+(e&&e.message?e.message:"不明")); }
+  };
+  const handleSample=()=>{ applyData(SAMPLE_DATA); showMsg("✓ サンプル読み込み"); };
+  const doClearScores=(halfId)=>{
+    if(halfId==="all") setScores(initScores());
+    else setScores(prev=>({...prev,[halfId]:{}}));
+    setConfirmClear(null); showMsg("✓ クリアしました");
+  };
+  const doClearAll=()=>{
+    setGame("fiveone");setTeamMode("bestgross");setTeamPairing("auto");setPlayers(initPlayers());
+    setHalfConfig(initConfig());setRates(initRates());setScores(initScores());setPayMode(5);
+    setConfirmClear(null); showMsg("✓ すべてクリアしました");
+  };
+
+  const nm=(pk)=> players[pk].name||pk;
+  const nm2=(pk)=> (players[pk].name||pk).slice(0,2);
+  const isTen = game==="tentwo";
+  const flip = C.myTeam===1?1:-1; /* チーム印を自チーム視点に */
+  const F=(v)=> v===null||v===undefined?null:v*flip;
+  const m1Label = teamMode==="highlow"?"ロー":"ベスト";
+  const m2Label = teamMode==="highlow"?"ハイ":"グロス";
+  const activeIds = C.activeHalves.map(h=>h.id);
+
+  /* ===== スタイル ===== */
+  const COLW={hole:40,score:46,mark:34,vegas:44,vs:46};
+  const stickyBase=(left,z)=>({position:"sticky",left,zIndex:z,background:"#10402a"});
+  const cellSt={padding:"2px 1px",textAlign:"center",borderBottom:"1px solid rgba(74,122,90,0.25)"};
+  const thSt={...cellSt,fontSize:10,color:"#d4af37",padding:"4px 1px",whiteSpace:"nowrap"};
+  const inputScore=(bird,best,imo)=>({
+    width:COLW.score-8,height:36,textAlign:"center",fontSize:16,fontWeight:"bold",
+    borderRadius:6,outline:"none",boxSizing:"border-box",
+    color: bird?"#fbbf24":"#f5f0e8",
+    background: best?"rgba(56,189,248,0.28)": imo?"rgba(192,132,252,0.28)":"rgba(0,0,0,0.35)",
+    border:`2px solid ${best?"#38bdf8": imo?"#c084fc":"rgba(74,122,90,0.7)"}`,
+  });
+
+  /* ===== 自分ステータス ===== */
+  const myNassau=C.nassauPts.A, myBonus=C.bonusPts.A, myStroke=C.strokePts.A, myVegas=C.vegasPts.A;
+  const myIndiv=C.indivTen.A, myTeamYen=C.teamMoney.A, myGrand=C.grand.A;
+  const chip=(label,val,unit)=>(
+    <span style={{display:"inline-block",padding:"3px 8px",margin:2,borderRadius:12,fontSize:11,
+      background:"rgba(0,0,0,0.3)",border:"1px solid rgba(212,175,55,0.4)",whiteSpace:"nowrap"}}>
+      <span style={{color:"#a8c4b0"}}>{label} </span>
+      <span style={{color:val>0?"#4ade80":val<0?"#f87171":"#f5f0e8",fontWeight:"bold"}}>{sgn(val)}{unit}</span>
+    </span>
+  );
+
+  return (
+    <div style={{fontFamily:"Georgia,serif",minHeight:"100vh",background:"linear-gradient(135deg,#0d3320,#1a5c38,#0f4028)",color:"#f5f0e8"}}>
+      {/* モーダル群 */}
+      {confirmClear&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <div style={{background:"#12402a",border:"1px solid #d4af37",borderRadius:12,padding:20,maxWidth:340,width:"100%"}}>
+            {confirmClear==="scores"?(
+              <div>
+                <div style={{fontWeight:"bold",color:"#d4af37",marginBottom:10}}>スコアをクリア</div>
+                {C.activeHalves.map(hd=>{
+                  const cnt=Object.keys(scores[hd.id]||{}).length;
+                  return (
+                    <div key={hd.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,fontSize:13}}>
+                      <span>{hd.label}（{halfConfig[hd.id]}）入力{cnt}ホール</span>
+                      <button onClick={()=>doClearScores(hd.id)} style={btnSt("#f87171")}>クリア</button>
+                    </div>
+                  );
+                })}
+                <button onClick={()=>doClearScores("all")} style={{...btnSt("#f87171"),width:"100%",marginTop:6}}>全ハーフをクリア</button>
+                <button onClick={()=>setConfirmClear(null)} style={{...btnSt("#94a3b8"),width:"100%",marginTop:6}}>キャンセル</button>
+              </div>
+            ):(
+              <div>
+                <div style={{fontWeight:"bold",color:"#f87171",marginBottom:10}}>⚠️ すべてクリア</div>
+                <p style={{fontSize:12,color:"#a8c4b0"}}>プレーヤー名・HCP・スコア・設定をすべて消去します。よろしいですか？</p>
+                <div style={{display:"flex",gap:8,marginTop:10}}>
+                  <button onClick={doClearAll} style={{...btnSt("#f87171"),flex:1}}>すべて消去</button>
+                  <button onClick={()=>setConfirmClear(null)} style={{...btnSt("#94a3b8"),flex:1}}>キャンセル</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {modal&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div style={{background:"#12402a",border:"1px solid #d4af37",borderRadius:12,padding:16,maxWidth:420,width:"100%"}}>
+            <div style={{fontWeight:"bold",color:"#d4af37",marginBottom:8}}>{modal==="export"?"💾 データ保存（コピーして保管）":"📂 データ読込（貼り付け）"}</div>
+            <textarea value={jsonText} onChange={e=>setJsonText(e.target.value)} readOnly={modal==="export"} rows={9}
+              style={{width:"100%",boxSizing:"border-box",background:"rgba(0,0,0,0.4)",color:"#f5f0e8",border:"1px solid #4a7a5a",borderRadius:8,fontSize:11,padding:8,fontFamily:"monospace"}}/>
+            <div style={{display:"flex",gap:8,marginTop:8,justifyContent:"flex-end"}}>
+              {modal==="export"&&<button onClick={handleCopy} style={btnSt("#d4af37")}>📋 コピー</button>}
+              {modal==="import"&&<button onClick={handleImportOK} style={btnSt("#4ade80")}>✓ 読み込む</button>}
+              <button onClick={()=>setModal(null)} style={btnSt("#94a3b8")}>閉じる</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ヘッダー */}
+      <div style={{textAlign:"center",padding:"14px 8px 8px"}}>
+        <div style={{fontSize:20,fontWeight:"bold",color:"#d4af37",letterSpacing:2}}>⛳ TGC BET CALCULATOR</div>
+        <div style={{fontSize:11,color:"#a8c4b0",marginTop:2}}>東京ゴルフ倶楽部 ／ {GAME_DEFS[game].label} ／ {teamMode==="highlow"?"ハイ&ロー":"ベスト&グロス"} <span style={{color:"#6b8f78"}}>v2.8</span></div>
+        {lastSaved&&<div style={{fontSize:10,color:"#86efac",marginTop:2}}>✓ 自動保存: {lastSaved}</div>}
+        {msg&&<div style={{fontSize:12,color:"#d4af37",marginTop:4,fontWeight:"bold"}}>{msg}</div>}
+        <div style={{display:"flex",justifyContent:"center",gap:0,marginTop:8}}>
+          {[["setting","スタート"],["score","スコアカード"],["settle","精算"]].map(([id,label])=>(
+            <button key={id} onClick={()=>setTab(id)} style={{
+              padding:"8px 20px",fontSize:14,cursor:"pointer",fontFamily:"inherit",
+              background:tab===id?"#8B6914":"transparent",color:tab===id?"#fff":"#d4af37",
+              border:"1px solid #8B6914",fontWeight:tab===id?"bold":"normal",
+            }}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{maxWidth:640,margin:"0 auto",padding:"0 6px 40px"}}>
+
+        {/* ═══ スコアタブ ═══ */}
+        {tab==="score"&&(<>
+          {/* 自分ステータス */}
+          <Card title={`👤 ${nm("A")}の現況`}>
+            <div style={{textAlign:"center",lineHeight:2}}>
+              {chip("ナッソー",myNassau,"pt")}
+              {chip("→",myNassau*payMode,"点")}
+              {chip("ボーナス",myBonus,"点")}
+              {isTen&&chip("スト差",myStroke,"点")}
+              {isTen&&chip("ベガス",myVegas,"点")}
+            </div>
+            <div style={{textAlign:"center",marginTop:6,fontSize:13}}>
+              <span style={{color:"#a8c4b0"}}>個人計 </span>
+              <strong style={{color:myIndiv>0?"#4ade80":myIndiv<0?"#f87171":"#f5f0e8"}}>{sgn(myIndiv)}点（{yen(myIndiv*100)}）</strong>
+              <span style={{color:"#a8c4b0",marginLeft:8}}>チーム </span>
+              <strong style={{color:myTeamYen>0?"#4ade80":myTeamYen<0?"#f87171":"#f5f0e8"}}>{yen(myTeamYen)}</strong>
+            </div>
+            <div style={{textAlign:"center",marginTop:4,fontSize:15,fontWeight:"bold"}}>
+              <span style={{color:"#d4af37"}}>総計 </span>
+              <span style={{color:myGrand>0?"#4ade80":myGrand<0?"#f87171":"#f5f0e8"}}>{yen(myGrand)}</span>
+              {C.lunch.map((l,i)=>(
+                <span key={i} style={{fontSize:11,marginLeft:8,color:l.loser.includes("A")?"#f87171":"#4ade80"}}>
+                  🍱{l.loser.includes("A")?"ランチ負け":"ランチ勝ち"}
+                </span>
+              ))}
+            </div>
+          </Card>
+
+          {/* 凡例 */}
+          <div style={{fontSize:10,color:"#a8c4b0",textAlign:"center",margin:"6px 0 10px",lineHeight:1.8}}>
+            <span style={{color:"#fbbf24",fontWeight:"bold"}}>金数字=バーディー</span>／
+            <span style={{color:"#38bdf8",fontWeight:"bold"}}>青セル=ベスト</span>
+            {isTen&&<>／<span style={{color:"#c084fc",fontWeight:"bold"}}>紫セル=イモ</span></>}<br/>
+            相手マスの右上○×ー=自分との個人戦／右下+1=自分がもらう・−1=与える<br/>
+            チーム○=自分のチームの勝ち{isTen&&"／ベガス列=自分の±点"}｜備考欄は横スクロール→
+          </div>
+
+          {/* 各ハーフのスコアカード */}
+          {C.activeHalves.map(hd=>{
+            const hr=C.halves[hd.id];
+            const side=hr.teamSide;
+            const mySideW = C.myTeam===1?side.w1:side.w2;
+            const opSideW = C.myTeam===1?side.w2:side.w1;
+            return (
+              <Card key={hd.id} title={`📝 ${hd.label}（${halfConfig[hd.id]}・${hd.pt}pt）`}>
+                {/* レート */}
+                <div style={{textAlign:"center",marginBottom:8,fontSize:12}}>
+                  {hd.id==="half1" ? (
+                    game==="fiveone" ? (
+                      <span style={{color:"#d4af37",fontWeight:"bold"}}>🍱 ランチ奢り（固定）</span>
+                    ) : (
+                      <span>
+                        <button onClick={()=>setRates(r=>({...r,half1:{...r.half1,type:"lunch"}}))}
+                          style={{...selBtn(rates.half1.type==="lunch"),marginRight:6}}>🍱ランチ</button>
+                        <button onClick={()=>setRates(r=>({...r,half1:{...r.half1,type:"money"}}))}
+                          style={selBtn(rates.half1.type==="money")}>💴お金</button>
+                        {rates.half1.type==="money"&&(
+                          <span style={{marginLeft:8}}>¥
+                            <input type="number" inputMode="numeric" value={rates.half1.yen||""}
+                              onChange={e=>setRates(r=>({...r,half1:{...r.half1,yen:e.target.value}}))}
+                              style={rateInp}/>
+                          </span>
+                        )}
+                      </span>
+                    )
+                  ):(
+                    <span><span style={{color:"#a8c4b0"}}>レート ¥</span>
+                      <input type="number" inputMode="numeric" value={rates[hd.id]||""}
+                        onChange={e=>setRates(r=>({...r,[hd.id]:e.target.value}))}
+                        style={rateInp}/>
+                      <span style={{color:"#a8c4b0",fontSize:10}}> /人</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* 表 */}
+                <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch",margin:"0 -6px"}}>
+                  <table style={{borderCollapse:"separate",borderSpacing:0,minWidth:COLW.hole+COLW.score*4+COLW.mark*2+(isTen?COLW.vegas+COLW.vs*3:0)+8}}>
+                    <thead>
+                      <tr>
+                        <th style={{...thSt,...stickyBase(0,5),width:COLW.hole}}>H</th>
+                        {PLAYER_KEYS.map((pk,i)=>(
+                          <th key={pk} style={{...thSt,...stickyBase(COLW.hole+COLW.score*i,5),width:COLW.score}}>
+                            <div style={{fontSize:9,color:"#86efac",lineHeight:1.2}}>HC{players[pk].hcp||"?"}</div>
+                            <div>{nm2(pk)}</div>
+                          </th>
+                        ))}
+                        <th style={{...thSt,width:COLW.mark}}>{m1Label.slice(0,2)}</th>
+                        <th style={{...thSt,width:COLW.mark}}>{m2Label.slice(0,2)}</th>
+                        {isTen&&<th style={{...thSt,width:COLW.vegas}}>ベガス</th>}
+                        {isTen&&["B","C","D"].map(o=>(
+                          <th key={o} style={{...thSt,width:COLW.vs}}>vs{nm2(o)}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hr.courseHoles.map(h=>{
+                        const tr=hr.teamRes[h.hole]||{};
+                        const vg=hr.vegas[h.hole];
+                        const va=hr.vsA[h.hole]||{};
+                        return (
+                          <tr key={h.hole}>
+                            <td style={{...cellSt,...stickyBase(0,4)}}>
+                              <div style={{fontSize:15,fontWeight:"bold",color:"#d4af37",lineHeight:1}}>{h.hole}</div>
+                              <div style={{fontSize:8,color:"#a8c4b0"}}>P{h.par}·{h.hdcp}</div>
+                            </td>
+                            {PLAYER_KEYS.map((pk,i)=>{
+                              const raw=scores[hd.id]?.[h.hole]?.[pk]||"";
+                              const g=parseInt(raw);
+                              const bird=!isNaN(g)&&g>0&&g<=h.par-1;
+                              const best=hr.bestPk[h.hole]===pk;
+                              const imo=isTen&&hr.imoPk[h.hole]===pk;
+                              /* 相手セル: 右上=個人戦結果○×ー, 右下=ハンデ授受(+1=自分がもらう/−1=与える) */
+                              let vsMark=null, hcMark=null;
+                              if(pk!=="A"){
+                                const va=(hr.vsA[h.hole]||{})[pk];
+                                if(va!==undefined) vsMark = va>0?{t:"○",c:"#4ade80"}:va<0?{t:"×",c:"#f87171"}:{t:"ー",c:"#94a3b8"};
+                                const hA=parseInt(players.A.hcp)||0, hO=parseInt(players[pk].hcp)||0;
+                                if(hA>hO){ const s=strokesForHole(hA-hO,h.hdcp); if(s>0) hcMark={t:"+"+s,c:"#4ade80"}; }
+                                else if(hO>hA){ const s=strokesForHole(hO-hA,h.hdcp); if(s>0) hcMark={t:"−"+s,c:"#fbbf24"}; }
+                              }
+                              return (
+                                <td key={pk} style={{...cellSt,...stickyBase(COLW.hole+COLW.score*i,4)}}>
+                                  <div style={{position:"relative",display:"inline-block"}}>
+                                    <input type="number" inputMode="numeric" min="1" max="19" value={raw}
+                                      onChange={e=>setScore(hd.id,h.hole,pk,e.target.value)}
+                                      style={inputScore(bird,best,imo)}/>
+                                    {vsMark&&<span style={{position:"absolute",top:-2,right:1,fontSize:11,fontWeight:"bold",color:vsMark.c,pointerEvents:"none",lineHeight:1,textShadow:"0 0 3px #000"}}>{vsMark.t}</span>}
+                                    {hcMark&&<span style={{position:"absolute",bottom:0,right:1,fontSize:10,fontWeight:"bold",color:hcMark.c,pointerEvents:"none",lineHeight:1,textShadow:"0 0 3px #000"}}>{hcMark.t}</span>}
+                                  </div>
+                                </td>
+                              );
+                            })}
+                            <td style={{...cellSt,fontSize:16,fontWeight:"bold",color:K(F(tr.m1))}}>{S(F(tr.m1))}</td>
+                            <td style={{...cellSt,fontSize:16,fontWeight:"bold",color:K(F(tr.m2))}}>{S(F(tr.m2))}</td>
+                            {isTen&&(()=>{
+                              const myPts = vg ? vg.pts*vg.winner*flip : null;
+                              return (
+                                <td style={{...cellSt,fontSize:12,fontWeight:"bold",
+                                  color:myPts===null?"#3f5a48":myPts>0?"#4ade80":myPts<0?"#f87171":"#94a3b8"}}>
+                                  {myPts===null?"":sgn(myPts)}
+                                </td>
+                              );
+                            })()}
+                            {isTen&&["B","C","D"].map(o=>{
+                              const v=va[o];
+                              return (
+                                <td key={o} style={{...cellSt,fontSize:12,fontWeight:"bold",
+                                  color:v===undefined?"#3f5a48":v>0?"#4ade80":v<0?"#f87171":"#94a3b8"}}>
+                                  {v===undefined?"":sgn(v)}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                      {/* 計行: グロス計＋ベガス合計＋vs合計 */}
+                      <tr>
+                        <td style={{...cellSt,...stickyBase(0,4),fontSize:10,color:"#d4af37",fontWeight:"bold"}}>計</td>
+                        {PLAYER_KEYS.map((pk,i)=>(
+                          <td key={pk} style={{...cellSt,...stickyBase(COLW.hole+COLW.score*i,4),fontSize:14,fontWeight:"bold",color:"#d4af37"}}>
+                            {C.halves[hd.id].grossCnt[pk]>0?C.halves[hd.id].grossTot[pk]:""}
+                          </td>
+                        ))}
+                        <td style={cellSt} colSpan={2}></td>
+                        {isTen&&(()=>{
+                          const vt=hr.courseHoles.reduce((s,h)=>{
+                            const v=hr.vegas[h.hole]; return s+(v?v.pts*v.winner*flip:0);
+                          },0);
+                          return (
+                            <td style={{...cellSt,fontSize:13,fontWeight:"bold",
+                              color:vt>0?"#4ade80":vt<0?"#f87171":"#94a3b8"}}>{sgn(vt)}</td>
+                          );
+                        })()}
+                        {isTen&&["B","C","D"].map(o=>{
+                          const st=hr.courseHoles.reduce((s,h)=>{
+                            const v=(hr.vsA[h.hole]||{})[o]; return s+(v!==undefined?v:0);
+                          },0);
+                          return (
+                            <td key={o} style={{...cellSt,fontSize:12,fontWeight:"bold",
+                              color:st>0?"#4ade80":st<0?"#f87171":"#94a3b8"}}>{sgn(st)}</td>
+                          );
+                        })}
+                      </tr>
+                      {/* 最終ハーフのみ: 各相手との個人戦結果pt(点)を各列の下に表示 */}
+                      {hd.id===activeIds[activeIds.length-1]&&(
+                        <tr>
+                          <td style={{...cellSt,...stickyBase(0,4),fontSize:9,color:"#d4af37",fontWeight:"bold"}}>pt</td>
+                          {PLAYER_KEYS.map((pk,i)=>{
+                            if(pk==="A"){
+                              return (
+                                <td key={pk} style={{...cellSt,...stickyBase(COLW.hole+COLW.score*i,4)}}>
+                                  <div style={{fontSize:13,fontWeight:"bold",color:myNassau>0?"#4ade80":myNassau<0?"#f87171":"#94a3b8"}}>{sgn(myNassau)}pt</div>
+                                  <div style={{fontSize:10,color:myNassau>0?"#4ade80":myNassau<0?"#f87171":"#94a3b8"}}>{sgn(myNassau*payMode)}点</div>
+                                  <div style={{fontSize:8,color:"#a8c4b0"}}>合計</div>
+                                </td>
+                              );
+                            }
+                            const pts=C.matchups["A"+pk].pts;
+                            return (
+                              <td key={pk} style={{...cellSt,...stickyBase(COLW.hole+COLW.score*i,4)}}>
+                                <div style={{fontSize:13,fontWeight:"bold",color:pts>0?"#4ade80":pts<0?"#f87171":"#94a3b8"}}>{sgn(pts)}pt</div>
+                                <div style={{fontSize:10,color:pts>0?"#4ade80":pts<0?"#f87171":"#94a3b8"}}>{sgn(pts*payMode)}点</div>
+                              </td>
+                            );
+                          })}
+                          <td style={cellSt} colSpan={2+(isTen?4:0)}></td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+              </Card>
+            );
+          })}
+
+          {/* 3ハーフ目・4ハーフ目に進む */}
+          {!halfConfig.half3&&(
+            <Card title="⛳ 続けますか？">
+              <div style={{fontSize:12,color:"#a8c4b0",textAlign:"center",marginBottom:8}}>3ハーフ目（2ラウンド目）に進む場合はコースを選択</div>
+              <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+                <button onClick={()=>setHalfConfig(cf=>({...cf,half3:"OUT",half4:"IN"}))} style={selBtn(false)}>OUTから（H1-9）</button>
+                <button onClick={()=>setHalfConfig(cf=>({...cf,half3:"IN",half4:"OUT"}))} style={selBtn(false)}>INから（H10-18）</button>
+              </div>
+            </Card>
+          )}
+          {halfConfig.half3&&!halfConfig.half4&&(
+            <Card title="⛳ 続けますか？">
+              <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+                <button onClick={()=>setHalfConfig(cf=>({...cf,half4:cf.half3==="OUT"?"IN":"OUT"}))} style={selBtn(false)}>＋ 4ハーフ目を追加（{halfConfig.half3==="OUT"?"IN":"OUT"}）</button>
+              </div>
+            </Card>
+          )}
+
+          {/* 最終結果（一番下） */}
+          <Card title="🏁 最終結果（自分）">
+            <div style={{textAlign:"center",fontSize:14,lineHeight:2}}>
+              <div>
+                <span style={{color:"#a8c4b0"}}>ナッソー </span>
+                <strong style={{color:myNassau>0?"#4ade80":myNassau<0?"#f87171":"#f5f0e8"}}>{sgn(myNassau)}pt（{sgn(myNassau*payMode)}点）</strong>
+                <span style={{color:"#a8c4b0",marginLeft:10}}>ボーナス </span>
+                <strong style={{color:myBonus>0?"#4ade80":myBonus<0?"#f87171":"#f5f0e8"}}>{sgn(myBonus)}点</strong>
+              </div>
+              {isTen&&(
+                <div>
+                  <span style={{color:"#a8c4b0"}}>スト差 </span>
+                  <strong style={{color:myStroke>0?"#4ade80":myStroke<0?"#f87171":"#f5f0e8"}}>{sgn(myStroke)}点</strong>
+                  <span style={{color:"#a8c4b0",marginLeft:10}}>ベガス </span>
+                  <strong style={{color:myVegas>0?"#4ade80":myVegas<0?"#f87171":"#f5f0e8"}}>{sgn(myVegas)}点</strong>
+                </div>
+              )}
+              <div style={{borderTop:"1px solid rgba(212,175,55,0.3)",marginTop:6,paddingTop:6}}>
+                <span style={{color:"#a8c4b0"}}>個人計 </span>
+                <strong style={{fontSize:16,color:myIndiv>0?"#4ade80":myIndiv<0?"#f87171":"#f5f0e8"}}>{sgn(myIndiv)}点（{yen(myIndiv*100)}）</strong>
+                <span style={{color:"#a8c4b0",marginLeft:10}}>チーム </span>
+                <strong style={{color:myTeamYen>0?"#4ade80":myTeamYen<0?"#f87171":"#f5f0e8"}}>{yen(myTeamYen)}</strong>
+              </div>
+              <div style={{fontSize:18,fontWeight:"bold",marginTop:4}}>
+                <span style={{color:"#d4af37"}}>総計 </span>
+                <span style={{color:myGrand>0?"#4ade80":myGrand<0?"#f87171":"#f5f0e8"}}>{yen(myGrand)}</span>
+                {C.lunch.map((l,i)=>(
+                  <span key={i} style={{fontSize:12,marginLeft:8,color:l.loser.includes("A")?"#f87171":"#4ade80"}}>
+                    🍱{l.loser.includes("A")?"ランチ負け":"ランチ勝ち"}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </>)}
+        {tab==="settle"&&(<>
+          {/* ボーナス集計 */}
+          <Card title="🐦 ボーナス集計">
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+              <thead><tr>
+                <th style={tblTh}>選手</th><th style={tblTh}>🐦バーディー</th><th style={tblTh}>⭐ベスト</th>
+                {isTen&&<th style={tblTh}>🍠イモ</th>}<th style={tblTh}>差引点</th>
+              </tr></thead>
+              <tbody>
+                {PLAYER_KEYS.map(pk=>(
+                  <tr key={pk}>
+                    <td style={tblTd}>{nm(pk)}</td>
+                    <td style={tblTd}>{C.cntBirdie[pk]}回</td>
+                    <td style={tblTd}>{C.cntBest[pk]}回</td>
+                    {isTen&&<td style={tblTd}>{C.cntImo[pk]}回</td>}
+                    <td style={{...tblTd,fontWeight:"bold",color:C.bonusPts[pk]>0?"#4ade80":C.bonusPts[pk]<0?"#f87171":"#f5f0e8"}}>{sgn(C.bonusPts[pk])}点</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p style={noteSt}>バーディー・ベスト＝+3点（他3人から各1点）{isTen&&"／イモ＝−3点（他3人へ各1点）"}。ベスト＝他3人全員に個人HCP差ネットで勝った人（全勝制）{isTen&&"、イモは全敗制"}。</p>
+          </Card>
+
+          {/* ストローク差 */}
+          {isTen&&(
+            <Card title="📏 ネットストローク差">
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                <tbody>
+                  {MATCHUP_PAIRS.map(([p1,p2])=>{
+                    const s=C.strokePairs[p1+p2];
+                    return (
+                      <tr key={p1+p2}>
+                        <td style={tblTd}>{nm(p1)} vs {nm(p2)}</td>
+                        <td style={{...tblTd,fontWeight:"bold",color:s>0?"#4ade80":s<0?"#f87171":"#94a3b8"}}>
+                          {s===0?"±0":s>0?`${nm(p1)} +${s}点`:`${nm(p2)} +${-s}点`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div style={{marginTop:8,fontSize:12,textAlign:"center"}}>
+                {PLAYER_KEYS.map(pk=>(
+                  <span key={pk} style={{margin:"0 6px"}}>
+                    {nm2(pk)} <strong style={{color:C.strokePts[pk]>0?"#4ade80":C.strokePts[pk]<0?"#f87171":"#f5f0e8"}}>{sgn(C.strokePts[pk])}点</strong>
+                  </span>
+                ))}
+              </div>
+              <p style={noteSt}>全プレーホール通しの2人間ネット差（個人HCP差方式）＝点数。</p>
+            </Card>
+          )}
+
+          {/* ラスベガス */}
+          {isTen&&(
+            <Card title="🎰 ラスベガス">
+              {C.activeHalves.map(hd=>{
+                const hr=C.halves[hd.id];
+                const rows=hr.courseHoles.filter(h=>hr.vegas[h.hole]);
+                if(!rows.length) return null;
+                return (
+                  <div key={hd.id} style={{marginBottom:10}}>
+                    <div style={{fontSize:12,color:"#d4af37",fontWeight:"bold",marginBottom:4}}>{hd.label}（{halfConfig[hd.id]}）</div>
+                    <div style={{overflowX:"auto"}}>
+                      <table style={{borderCollapse:"collapse",fontSize:11,width:"100%"}}>
+                        <thead><tr>
+                          <th style={tblTh}>H</th>
+                          <th style={tblTh}>T1({nm2(C.team1[0])}·{nm2(C.team1[1])})</th>
+                          <th style={tblTh}>T2({nm2(C.team2[0])}·{nm2(C.team2[1])})</th>
+                          <th style={tblTh}>差→点</th><th style={tblTh}>勝</th>
+                        </tr></thead>
+                        <tbody>
+                          {rows.map(h=>{
+                            const vg=hr.vegas[h.hole];
+                            return (
+                              <tr key={h.hole}>
+                                <td style={tblTd}>{h.hole}</td>
+                                <td style={{...tblTd,color:vg.b1?"#fbbf24":"#f5f0e8"}}>{vg.n1}{vg.b1&&"🐦"}</td>
+                                <td style={{...tblTd,color:vg.b2?"#fbbf24":"#f5f0e8"}}>{vg.n2}{vg.b2&&"🐦"}</td>
+                                <td style={tblTd}>{Math.abs(vg.n1-vg.n2)}→{vg.pts}</td>
+                                <td style={{...tblTd,fontWeight:"bold",color:K(vg.winner)}}>{vg.winner===1?"T1":vg.winner===-1?"T2":"ー"}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+              <div style={{fontSize:12,textAlign:"center"}}>
+                {PLAYER_KEYS.map(pk=>(
+                  <span key={pk} style={{margin:"0 6px"}}>
+                    {nm2(pk)} <strong style={{color:C.vegasPts[pk]>0?"#4ade80":C.vegasPts[pk]<0?"#f87171":"#f5f0e8"}}>{sgn(C.vegasPts[pk])}点</strong>
+                  </span>
+                ))}
+              </div>
+              <p style={noteSt}>数字はネット（4人の最少HCPを基準に、差分をHDCP順に引く）で作成。小さい数字が十の位。バーディー（グロスのみで判定）で相手の数字が逆転（両チームなら両方逆転）。差は5点刻みに切上げ。勝ちチームの各自が+、負けチームの各自が−。</p>
+            </Card>
+          )}
+
+          {/* チーム戦 */}
+          <Card title={`🏌️ チーム戦（${teamMode==="highlow"?"ハイ&ロー":"ベスト&グロス"}）`}>
+            <div style={{fontSize:12,textAlign:"center",marginBottom:8}}>
+              <span style={{color:"#4ade80"}}>T1: {nm(C.team1[0])}&{nm(C.team1[1])}（計{C.thcp.sum1}）</span>
+              <span style={{color:"#d4af37",margin:"0 6px"}}>VS</span>
+              <span style={{color:"#f87171"}}>T2: {nm(C.team2[0])}&{nm(C.team2[1])}（計{C.thcp.sum2}）</span>
+              <div style={{fontSize:11,color:"#a8c4b0",marginTop:2}}>
+                {teamMode==="bestgross"? `チームハンデ差${C.thcp.diff}（受: ${C.thcp.recv===1?"T1":C.thcp.recv===2?"T2":"なし"}）` : "各対決は個人HCP差で対戦"}
+              </div>
+            </div>
+            {C.activeHalves.map(hd=>{
+              const hr=C.halves[hd.id]; const side=hr.teamSide;
+              const hm=C.halfMoney[hd.id];
+              return (
+                <div key={hd.id} style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:10,marginBottom:8}}>
+                  <div style={{fontSize:12,fontWeight:"bold",color:"#d4af37",marginBottom:4}}>{hd.label}（{halfConfig[hd.id]}）</div>
+                  <div style={{overflowX:"auto"}}>
+                    <table style={{borderCollapse:"collapse",fontSize:12}}>
+                      <tbody>
+                        {[["m1",m1Label],["m2",m2Label]].map(([key,label])=>(
+                          <tr key={key}>
+                            <td style={{...tblTd,whiteSpace:"nowrap",color:key==="m1"?"#86efac":"#fbbf24"}}>{label}</td>
+                            {hr.courseHoles.map(h=>{
+                              const v=hr.teamRes[h.hole]?.[key];
+                              return <td key={h.hole} style={{...tblTd,padding:"3px 4px",fontWeight:"bold",color:K(v)}}>{S(v)}</td>;
+                            })}
+                            <td style={{...tblTd,fontWeight:"bold",color:"#d4af37"}}>
+                              {key==="m1"?`${side.m1w1}-${side.m1w2}`:`${side.m2w1}-${side.m2w2}`}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{fontSize:12,marginTop:4}}>
+                    合計 T1:{side.w1} - T2:{side.w2} →
+                    <strong style={{color:K(side.winner),marginLeft:4}}>{side.winner===1?"T1勝":side.winner===-1?"T2勝":"引分"}</strong>
+                    {hm&&hm.type==="lunch"&&<span style={{marginLeft:8}}>🍱 負け（{hm.loser.map(nm).join("・")}）がランチ奢り</span>}
+                    {hm&&hm.type==="money"&&<span style={{marginLeft:8}}>💴 負け各自→勝ち各自 ¥{hm.yen.toLocaleString()}</span>}
+                  </div>
+                </div>
+              );
+            })}
+            <p style={noteSt}>○=T1勝 ×=T2勝 ー=引分。ハーフの勝敗は{m1Label}勝ち数＋{m2Label}勝ち数の総数（同数は引分）。</p>
+          </Card>
+
+          {/* 個人対戦 */}
+          <Card title="⚔️ 個人対戦（総当たり6組）">
+            {MATCHUP_PAIRS.map(([p1,p2])=>{
+              const mp=C.matchups[p1+p2];
+              return (
+                <div key={p1+p2} style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:8,marginBottom:6,fontSize:12}}>
+                  <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap"}}>
+                    <span><strong>{nm(p1)}</strong> vs <strong>{nm(p2)}</strong>
+                      <span style={{fontSize:10,color:"#a8c4b0",marginLeft:4}}>HCP差{Math.abs((parseInt(players[p1].hcp)||0)-(parseInt(players[p2].hcp)||0))}</span>
+                    </span>
+                    <strong style={{color:mp.pts>0?"#4ade80":mp.pts<0?"#f87171":"#94a3b8"}}>
+                      {nm2(p1)} {sgn(mp.pts)}pt（{sgn(mp.pts*payMode)}点）
+                    </strong>
+                  </div>
+                  <div style={{fontSize:10,color:"#a8c4b0",marginTop:2}}>
+                    {mp.detail.map((d,i)=>(
+                      <span key={i} style={{marginRight:8}}>
+                        {d.label}({d.side.w1}-{d.side.w2}){d.side.winner===1?"○":d.side.winner===-1?"×":"ー"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            <p style={noteSt}>各ハーフ: ハーフ1=1pt, ハーフ2=2pt, 前半18H計=1pt（2R目も同構成）。ネットは2人のHCP差を難しい順に適用。</p>
+          </Card>
+
+          {/* 総合精算 */}
+          <Card title="💰 総合精算">
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+              <thead><tr>
+                <th style={tblTh}>選手</th><th style={tblTh}>ナッソー</th><th style={tblTh}>ボーナス</th>
+                {isTen&&<th style={tblTh}>スト</th>}{isTen&&<th style={tblTh}>ベガス</th>}
+                <th style={tblTh}>個人(¥)</th><th style={tblTh}>チーム(¥)</th><th style={tblTh}>計(¥)</th>
+              </tr></thead>
+              <tbody>
+                {PLAYER_KEYS.map(pk=>(
+                  <tr key={pk}>
+                    <td style={tblTd}>{nm(pk)}</td>
+                    <td style={tblTd}>{sgn(C.nassauPts[pk])}pt</td>
+                    <td style={tblTd}>{sgn(C.bonusPts[pk])}</td>
+                    {isTen&&<td style={tblTd}>{sgn(C.strokePts[pk])}</td>}
+                    {isTen&&<td style={tblTd}>{sgn(C.vegasPts[pk])}</td>}
+                    <td style={{...tblTd,color:C.indivTen[pk]>0?"#4ade80":C.indivTen[pk]<0?"#f87171":"#f5f0e8"}}>{yen(C.indivTen[pk]*100)}</td>
+                    <td style={{...tblTd,color:C.teamMoney[pk]>0?"#4ade80":C.teamMoney[pk]<0?"#f87171":"#f5f0e8"}}>{yen(C.teamMoney[pk])}</td>
+                    <td style={{...tblTd,fontWeight:"bold",color:C.grand[pk]>0?"#4ade80":C.grand[pk]<0?"#f87171":"#f5f0e8"}}>{yen(C.grand[pk])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {C.lunch.map((l,i)=>(
+              <div key={i} style={{fontSize:12,marginTop:6,textAlign:"center"}}>
+                🍱 {l.half}: 負けチーム（{l.loser.map(nm).join("・")}）がランチ奢り（金額外）
+              </div>
+            ))}
+            <p style={noteSt}>個人 = (ナッソーpt×{payMode}点 + ボーナス{isTen&&" + スト差 + ベガス"}) × 100円。4人の合計は0円。</p>
+          </Card>
+        </>)}
+
+        {/* ═══ 設定タブ ═══ */}
+        {tab==="setting"&&(<>
+          <Card title="🎮 ゲーム">
+            <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+              {Object.entries(GAME_DEFS).map(([id,def])=>(
+                <button key={id} onClick={()=>setGame(id)} style={selBtn(game===id)}>{def.label}</button>
+              ))}
+            </div>
+            <p style={noteSt}>テントゥートゥーワン＝ファイブワン＋イモ・ネットストローク差・ラスベガス。</p>
+          </Card>
+          <Card title="🏌️ チーム戦方式">
+            <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+              <button onClick={()=>setTeamMode("bestgross")} style={selBtn(teamMode==="bestgross")}>ベスト&グロス</button>
+              <button onClick={()=>setTeamMode("highlow")} style={selBtn(teamMode==="highlow")}>ハイ&ロー</button>
+            </div>
+            <p style={noteSt}>ハイ&ロー＝両チームのロー同士・ハイ同士が個人HCP差ネットで対戦。</p>
+          </Card>
+          <Card title="⚙️ 支払いモード">
+            <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+              {[[5,"5 to One","1pt=5点"],[10,"10 to One","1pt=10点"]].map(([v,l,s])=>(
+                <button key={v} onClick={()=>setPayMode(v)} style={selBtn(payMode===v)}>{l}<br/><span style={{fontSize:10}}>{s}</span></button>
+              ))}
+            </div>
+          </Card>
+          <Card title="👥 プレーヤー（1人目=自分）">
+            {PLAYER_KEYS.map(pk=>(
+              <div key={pk} style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
+                <span style={{width:18,color:"#d4af37",fontWeight:"bold",fontSize:12}}>{pk}</span>
+                <input value={players[pk].name} placeholder="名前" onChange={e=>setPlayers(p=>({...p,[pk]:{...p[pk],name:e.target.value}}))}
+                  style={{...inSt,flex:2}}/>
+                <input type="number" inputMode="numeric" value={players[pk].hcp} placeholder="HCP" onChange={e=>setPlayers(p=>({...p,[pk]:{...p[pk],hcp:e.target.value}}))}
+                  style={{...inSt,flex:1}}/>
+              </div>
+            ))}
+            <div style={{marginTop:10}}>
+              <div style={{fontSize:12,color:"#d4af37",marginBottom:4}}>チーム編成</div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                <button onClick={()=>setTeamPairing("auto")} style={selBtn(teamPairing==="auto")}>自動<br/><span style={{fontSize:9}}>HCP最小×最大</span></button>
+                {[["AB","C","D"],["AC","B","D"],["AD","B","C"]].map(([pr,o1,o2])=>(
+                  <button key={pr} onClick={()=>setTeamPairing(pr)} style={selBtn(teamPairing===pr)}>
+                    {nm2("A")}&{nm2(pr[1])}<br/><span style={{fontSize:9}}>vs {nm2(o1)}&{nm2(o2)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{fontSize:12,textAlign:"center",marginTop:8,color:"#a8c4b0"}}>
+              チーム編成: <span style={{color:"#4ade80"}}>T1 {nm(C.team1[0])}&{nm(C.team1[1])}</span>
+              <span style={{margin:"0 4px"}}>vs</span>
+              <span style={{color:"#f87171"}}>T2 {nm(C.team2[0])}&{nm(C.team2[1])}</span>
+              <span style={{marginLeft:6}}>差{C.thcp.diff}</span>
+            </div>
+          </Card>
+          <Card title="⛳ ハーフ構成">
+            <div style={{marginBottom:8}}>
+              <div style={{fontSize:12,color:"#d4af37",marginBottom:4}}>ハーフ1（1pt）</div>
+              <div style={{display:"flex",gap:6}}>
+                <button onClick={()=>setHalf1("OUT")} style={selBtn(halfConfig.half1==="OUT")}>OUT（H1-9）</button>
+                <button onClick={()=>setHalf1("IN")} style={selBtn(halfConfig.half1==="IN")}>IN（H10-18）</button>
+              </div>
+            </div>
+            <div style={{marginBottom:8}}>
+              <div style={{fontSize:12,color:"#d4af37",marginBottom:4}}>ハーフ2（2pt）</div>
+              <div style={{fontSize:12,color:"#a8c4b0"}}>{halfConfig.half2}（ハーフ1と自動連動）</div>
+            </div>
+            <div style={{marginBottom:8}}>
+              <div style={{fontSize:12,color:"#d4af37",marginBottom:4}}>ハーフ3（1pt・2ラウンド目）</div>
+              {halfConfig.half3?(
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <button onClick={()=>setHalf3("OUT")} style={selBtn(halfConfig.half3==="OUT")}>OUT</button>
+                  <button onClick={()=>setHalf3("IN")} style={selBtn(halfConfig.half3==="IN")}>IN</button>
+                  <button onClick={()=>setHalfConfig(c=>({...c,half3:null,half4:null}))} style={btnSt("#f87171")}>削除</button>
+                </div>
+              ):(
+                <button onClick={()=>setHalfConfig(c=>({...c,half3:"OUT"}))} style={btnSt("#4ade80")}>＋ 追加する</button>
+              )}
+            </div>
+            {halfConfig.half3&&(
+              <div style={{marginBottom:4}}>
+                <div style={{fontSize:12,color:"#d4af37",marginBottom:4}}>ハーフ4（2pt）</div>
+                {halfConfig.half4?(
+                  <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                    <span style={{fontSize:12,color:"#a8c4b0"}}>{halfConfig.half4}（ハーフ3と自動連動）</span>
+                    <button onClick={()=>setHalfConfig(c=>({...c,half4:null}))} style={btnSt("#f87171")}>削除</button>
+                  </div>
+                ):(
+                  <button onClick={()=>setHalfConfig(c=>({...c,half4:c.half3==="OUT"?"IN":"OUT"}))} style={btnSt("#4ade80")}>＋ 追加する</button>
+                )}
+              </div>
+            )}
+            <p style={noteSt}>2ラウンド目（ハーフ3+4）は「18ホールをもう1周」として、1ラウンド目と同じポイント構成（1pt/2pt/18H計1pt）。</p>
+          </Card>
+          <Card title="💾 データ">
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center"}}>
+              <button onClick={handleExport} style={btnSt("#4ade80")}>💾 保存</button>
+              <button onClick={handleImport} style={btnSt("#38bdf8")}>📂 読込</button>
+              <button onClick={handleSample} style={btnSt("#8B6914")}>📋 サンプル</button>
+              <button onClick={()=>setConfirmClear("scores")} style={btnSt("#fbbf24")}>🗑️ スコアクリア</button>
+              <button onClick={()=>setConfirmClear("all")} style={btnSt("#f87171")}>⚠️ すべてクリア</button>
+            </div>
+          </Card>
+        </>)}
+      </div>
+    </div>
+  );
+}
+
+/* ===== 共通UI ===== */
+const inSt = {boxSizing:"border-box",padding:"8px 10px",borderRadius:6,background:"rgba(0,0,0,0.3)",border:"1px solid #4a7a5a",color:"#f5f0e8",fontSize:14,outline:"none",minWidth:0};
+const btnSt = (c)=>({padding:"7px 14px",borderRadius:6,border:`1px solid ${c}`,background:`${c}22`,color:c,cursor:"pointer",fontSize:12,fontFamily:"inherit"});
+const selBtn = (active)=>({padding:"9px 14px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"inherit",
+  border:`2px solid ${active?"#d4af37":"#4a7a5a"}`,
+  background:active?"rgba(212,175,55,0.18)":"rgba(0,0,0,0.2)",
+  color:active?"#d4af37":"#a8c4b0",fontWeight:active?"bold":"normal"});
+const rateInp = {width:80,textAlign:"center",padding:"6px 6px",fontSize:14,borderRadius:6,border:"2px solid #d4af37",background:"rgba(0,0,0,0.3)",color:"#f5f0e8",outline:"none"};
+const tblTh = {padding:"5px 6px",fontSize:11,color:"#d4af37",borderBottom:"1px solid rgba(212,175,55,0.4)",textAlign:"center",whiteSpace:"nowrap"};
+const tblTd = {padding:"5px 6px",textAlign:"center",borderBottom:"1px solid rgba(74,122,90,0.25)",whiteSpace:"nowrap"};
+const noteSt = {fontSize:10,color:"#a8c4b0",marginTop:8,lineHeight:1.6};
+
+function Card({title,children}){
+  return (
+    <div style={{background:"rgba(26,92,56,0.25)",border:"1px solid rgba(212,175,55,0.35)",borderRadius:12,padding:"12px 12px",marginBottom:12}}>
+      {title&&<div style={{fontSize:14,fontWeight:"bold",color:"#d4af37",marginBottom:8,borderBottom:"1px solid rgba(212,175,55,0.25)",paddingBottom:6}}>{title}</div>}
+      {children}
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(<GolfNassau />);
+</script>
+</body>
+</html>
