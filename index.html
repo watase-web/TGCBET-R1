@@ -130,13 +130,13 @@ function calcTeamHcp(players,team1,team2){
   return {sum1:s1,sum2:s2,diff,recv};
 }
 /* ベスト&グロス: 素のグロス、チームハンデのみ。
-   つけるか=コース全体HDCP<=差 / ベスト or グロス=ハーフ内順位の偶奇 */
-function teamHoleBG(g,team1,team2,diff,hdcp,halfRank,recv){
+   つけるか=コース全体HDCP<=差 / ベスト or グロス=実際に回る順にハンデ付くホールを交互(ベスト,グロス,...) */
+function teamHoleBG(g,team1,team2,diff,hdcp,bgTarget,recv){
   const v1=team1.map(pk=>g[pk]).filter(v=>v!==undefined);
   const v2=team2.map(pk=>g[pk]).filter(v=>v!==undefined);
   if(!v1.length||!v2.length) return {m1:null,m2:null};
   const applies = diff>0 && hdcp<=diff;
-  const app = !applies?null:(halfRank%2===1?"best":"gross");
+  const app = !applies?null:bgTarget;
   let b1=Math.min(...v1), b2=Math.min(...v2);
   if(app==="best"&&recv){ if(recv===1)b1-=1; else b2-=1; }
   const m1 = b1<b2?1:b1>b2?-1:0;
@@ -218,12 +218,34 @@ function computeAll(st){
   const pairHoleWins={}; /* halfId -> pairKey -> array of 1/-1/0 */
   const halves={};
 
+  /* チームハンデのベスト・グロス交互は、その日のスタートから通しで連続する
+     （ハーフをまたいでもリセットしない。2ラウンド目も1ラウンド目の続き）。
+     アクティブなハーフを順に、実際に回る順でハンデ付きホールを数え、
+     ベスト・グロス・ベスト・グロス...と割り当てる。 */
+  const bgTargetAll={}; // key: hd.id+"_"+hole
+  { let cnt=0;
+    activeHalves.forEach(hd=>{
+      const ct=halfConfig[hd.id];
+      const ch = ct==="OUT"?COURSE.OUT:COURSE.IN;
+      ch.forEach(h=>{
+        if(thcp.diff>0 && h.hdcp<=thcp.diff){
+          bgTargetAll[hd.id+"_"+h.hole] = (cnt%2===0)?"best":"gross";
+          cnt++;
+        } else {
+          bgTargetAll[hd.id+"_"+h.hole] = null;
+        }
+      });
+    });
+  }
+
   activeHalves.forEach(hd=>{
     const ct=halfConfig[hd.id];
     const courseHoles = ct==="OUT"?COURSE.OUT:COURSE.IN;
     const sc=scores[hd.id]||{};
     const halfRank={};
     [...courseHoles].sort((a,b)=>a.hdcp-b.hdcp).forEach((h,i)=>{halfRank[h.hole]=i+1;});
+    const bgTarget={};
+    courseHoles.forEach(h=>{ bgTarget[h.hole]=bgTargetAll[hd.id+"_"+h.hole]; });
     const teamRes={}, vegas={}, vsA={}, bestPk={}, imoPk={};
     const grossTot=zero(); const grossCnt=zero();
     pairHoleWins[hd.id]={}; MATCHUP_PAIRS.forEach(([a,b])=>pairHoleWins[hd.id][a+b]=[]);
@@ -257,7 +279,7 @@ function computeAll(st){
       /* チーム戦 */
       teamRes[h.hole] = teamMode==="highlow"
         ? teamHoleHL(g,team1,team2,players,h.hdcp)
-        : teamHoleBG(g,team1,team2,thcp.diff,h.hdcp,halfRank[h.hole],thcp.recv);
+        : teamHoleBG(g,team1,team2,thcp.diff,h.hdcp,bgTarget[h.hole],thcp.recv);
       /* ラスベガス */
       if(isTen){
         const vg=vegasHole(g,team1,team2,h.par,hcps,h.hdcp);
@@ -589,7 +611,7 @@ function GolfNassau(){
       {/* ヘッダー */}
       <div style={{textAlign:"center",padding:"14px 8px 8px"}}>
         <div style={{fontSize:20,fontWeight:"bold",color:"#d4af37",letterSpacing:2}}>⛳ TGC BET CALCULATOR</div>
-        <div style={{fontSize:11,color:"#a8c4b0",marginTop:2}}>東京ゴルフ倶楽部 ／ {GAME_DEFS[game].label} ／ {teamMode==="highlow"?"ハイ&ロー":"ベスト&グロス"} <span style={{color:"#6b8f78"}}>v2.9</span></div>
+        <div style={{fontSize:11,color:"#a8c4b0",marginTop:2}}>東京ゴルフ倶楽部 ／ {GAME_DEFS[game].label} ／ {teamMode==="highlow"?"ハイ&ロー":"ベスト&グロス"} <span style={{color:"#6b8f78"}}>v2.1</span></div>
         {lastSaved&&<div style={{fontSize:10,color:"#86efac",marginTop:2}}>✓ 自動保存: {lastSaved}</div>}
         {msg&&<div style={{fontSize:12,color:"#d4af37",marginTop:4,fontWeight:"bold"}}>{msg}</div>}
         <div style={{display:"flex",justifyContent:"center",gap:0,marginTop:8}}>
