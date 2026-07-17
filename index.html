@@ -203,7 +203,8 @@ function sideFromWins(w1,w2){ return {w1,w2,winner:w1>w2?1:w1<w2?-1:0}; }
 
 /* ════════════ 全体計算（純関数） ════════════ */
 function computeAll(st){
-  const {players,halfConfig,scores,game,teamMode,rates,payMode,teamPairing}=st;
+  const {players,halfConfig,scores,game,teamMode,rates,teamPairing}=st;
+  const payMode = game==="tentwo" ? 10 : 5;  // ファイブワン=5点, テントゥートゥーワン=10点（自動）
   const hcps={}; PLAYER_KEYS.forEach(pk=>hcps[pk]=parseInt(players[pk].hcp)||0);
   const {team1,team2}=determineTeams(players,teamPairing);
   const thcp=calcTeamHcp(players,team1,team2);
@@ -391,7 +392,7 @@ const initScores  = () => ({ half1:{}, half2:{}, half3:{}, half4:{} });
 const STORAGE_KEY = "golf_games_v5";
 
 const SAMPLE_DATA = {
-  game:"tentwo", teamMode:"bestgross", payMode:5,
+  game:"tentwo", teamMode:"bestgross",
   players:{A:{name:"渡瀬",hcp:"20"},B:{name:"野原",hcp:"11"},C:{name:"大木",hcp:"11"},D:{name:"鈴木",hcp:"21"}},
   halfConfig:{half1:"OUT",half2:"IN",half3:null,half4:null},
   rates:{half1:{type:"lunch",yen:1000},half2:500,half3:1000,half4:1000},
@@ -411,11 +412,11 @@ function GolfNassau(){
   const [game,setGame]           = useState("fiveone");
   const [teamMode,setTeamMode]   = useState("bestgross");
   const [teamPairing,setTeamPairing]=useState("auto");
+  const payMode = game==="tentwo" ? 10 : 5;  // ゲームで自動決定
   const [players,setPlayers]     = useState(initPlayers);
   const [halfConfig,setHalfConfig]=useState(initConfig);
   const [rates,setRates]         = useState(initRates);
   const [scores,setScores]       = useState(initScores);
-  const [payMode,setPayMode]     = useState(5);
   const [tab,setTab]             = useState("setting");
   const [msg,setMsg]             = useState("");
   const [modal,setModal]         = useState(null);
@@ -449,18 +450,17 @@ function GolfNassau(){
         half2:conv(p.tsuruRate.half2),half3:conv(p.tsuruRate.half3),half4:conv(p.tsuruRate.half4)});
     }
     if(p.scores) setScores({half1:{},half2:{},half3:{},half4:{},...p.scores});
-    if(p.payMode) setPayMode(p.payMode);
   };
   /* 自動保存 */
   useEffect(()=>{
     try{
-      localStorage.setItem(STORAGE_KEY,JSON.stringify({game,teamMode,teamPairing,players,halfConfig,rates,scores,payMode}));
+      localStorage.setItem(STORAGE_KEY,JSON.stringify({game,teamMode,teamPairing,players,halfConfig,rates,scores}));
       setLastSaved(new Date().toLocaleTimeString("ja-JP"));
     }catch(e){}
-  },[game,teamMode,teamPairing,players,halfConfig,rates,scores,payMode]);
+  },[game,teamMode,teamPairing,players,halfConfig,rates,scores]);
 
-  const C = useMemo(()=>computeAll({players,halfConfig,scores,game,teamMode,rates,payMode,teamPairing}),
-    [players,halfConfig,scores,game,teamMode,rates,payMode,teamPairing]);
+  const C = useMemo(()=>computeAll({players,halfConfig,scores,game,teamMode,rates,teamPairing}),
+    [players,halfConfig,scores,game,teamMode,rates,teamPairing]);
 
   const setScore=(halfId,hole,pk,val)=>{
     setScores(prev=>({...prev,[halfId]:{...prev[halfId],[hole]:{...(prev[halfId]?.[hole]||{}),[pk]:val}}}));
@@ -470,7 +470,7 @@ function GolfNassau(){
 
   const handleExport=()=>{
     try{
-      setJsonText(JSON.stringify({game,teamMode,teamPairing,players,halfConfig,rates,scores,payMode},null,2));
+      setJsonText(JSON.stringify({game,teamMode,teamPairing,players,halfConfig,rates,scores},null,2));
       setModal("export"); showMsg("保存データを表示しました");
     }catch(e){ showMsg("エラー: "+(e&&e.message||"不明")); }
   };
@@ -500,7 +500,7 @@ function GolfNassau(){
   };
   const doClearAll=()=>{
     setGame("fiveone");setTeamMode("bestgross");setTeamPairing("auto");setPlayers(initPlayers());
-    setHalfConfig(initConfig());setRates(initRates());setScores(initScores());setPayMode(5);
+    setHalfConfig(initConfig());setRates(initRates());setScores(initScores());
     setConfirmClear(null); showMsg("✓ すべてクリアしました");
   };
 
@@ -589,7 +589,7 @@ function GolfNassau(){
       {/* ヘッダー */}
       <div style={{textAlign:"center",padding:"14px 8px 8px"}}>
         <div style={{fontSize:20,fontWeight:"bold",color:"#d4af37",letterSpacing:2}}>⛳ TGC BET CALCULATOR</div>
-        <div style={{fontSize:11,color:"#a8c4b0",marginTop:2}}>東京ゴルフ倶楽部 ／ {GAME_DEFS[game].label} ／ {teamMode==="highlow"?"ハイ&ロー":"ベスト&グロス"} <span style={{color:"#6b8f78"}}>v2.8</span></div>
+        <div style={{fontSize:11,color:"#a8c4b0",marginTop:2}}>東京ゴルフ倶楽部 ／ {GAME_DEFS[game].label} ／ {teamMode==="highlow"?"ハイ&ロー":"ベスト&グロス"} <span style={{color:"#6b8f78"}}>v2.9</span></div>
         {lastSaved&&<div style={{fontSize:10,color:"#86efac",marginTop:2}}>✓ 自動保存: {lastSaved}</div>}
         {msg&&<div style={{fontSize:12,color:"#d4af37",marginTop:4,fontWeight:"bold"}}>{msg}</div>}
         <div style={{display:"flex",justifyContent:"center",gap:0,marginTop:8}}>
@@ -1088,7 +1088,7 @@ function GolfNassau(){
                 <button key={id} onClick={()=>setGame(id)} style={selBtn(game===id)}>{def.label}</button>
               ))}
             </div>
-            <p style={noteSt}>テントゥートゥーワン＝ファイブワン＋イモ・ネットストローク差・ラスベガス。</p>
+            <p style={noteSt}>ファイブワン＝1pt5点。テントゥートゥーワン＝1pt10点（＋イモ・ネットストローク差・ラスベガス）。点数レートはゲームで自動決定。</p>
           </Card>
           <Card title="🏌️ チーム戦方式">
             <div style={{display:"flex",gap:8,justifyContent:"center"}}>
@@ -1096,13 +1096,6 @@ function GolfNassau(){
               <button onClick={()=>setTeamMode("highlow")} style={selBtn(teamMode==="highlow")}>ハイ&ロー</button>
             </div>
             <p style={noteSt}>ハイ&ロー＝両チームのロー同士・ハイ同士が個人HCP差ネットで対戦。</p>
-          </Card>
-          <Card title="⚙️ 支払いモード">
-            <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-              {[[5,"5 to One","1pt=5点"],[10,"10 to One","1pt=10点"]].map(([v,l,s])=>(
-                <button key={v} onClick={()=>setPayMode(v)} style={selBtn(payMode===v)}>{l}<br/><span style={{fontSize:10}}>{s}</span></button>
-              ))}
-            </div>
           </Card>
           <Card title="👥 プレーヤー（1人目=自分）">
             {PLAYER_KEYS.map(pk=>(
