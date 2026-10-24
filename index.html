@@ -148,26 +148,28 @@ function teamHoleBG(g,team1,team2,diff,hdcp,bgTarget,recv){
   }
   return {m1,m2};
 }
-/* ハイ&ロー: ロー同士・ハイ同士を個人HCP差ネットで対戦 */
+/* ハイ&ロー: そのホールの素のグロスで、各チームのロー（良いスコア）同士・ハイ（悪いスコア）同士を対戦。
+   チームハンデ（2チームのHCP合計差）は、ロー対決・ハイ対決に交互につく。 */
 function sortTeamByHcp(team,players){
   return [...team].sort((a,b)=>{
     const ha=parseInt(players[a].hcp)||0, hb=parseInt(players[b].hcp)||0;
     return ha-hb || PLAYER_KEYS.indexOf(a)-PLAYER_KEYS.indexOf(b);
   });
 }
-function teamHoleHL(g,team1,team2,players,hdcp){
-  const [lo1,hi1]=sortTeamByHcp(team1,players);
-  const [lo2,hi2]=sortTeamByHcp(team2,players);
-  const hcp=pk=>parseInt(players[pk].hcp)||0;
-  let m1=null,m2=null;
-  if(g[lo1]!==undefined&&g[lo2]!==undefined){
-    const [n1,n2]=pairNets(g[lo1],g[lo2],hcp(lo1),hcp(lo2),hdcp);
-    m1 = n1<n2?1:n1>n2?-1:0;
-  }
-  if(g[hi1]!==undefined&&g[hi2]!==undefined){
-    const [n1,n2]=pairNets(g[hi1],g[hi2],hcp(hi1),hcp(hi2),hdcp);
-    m2 = n1<n2?1:n1>n2?-1:0;
-  }
+function teamHoleHL(g,team1,team2,diff,hdcp,bgTarget,recv){
+  const v1=team1.map(pk=>g[pk]).filter(v=>v!==undefined);
+  const v2=team2.map(pk=>g[pk]).filter(v=>v!==undefined);
+  if(v1.length<2||v2.length<2) return {m1:null,m2:null};
+  /* 各チームの良いスコア・悪いスコア（素のグロス） */
+  let good1=Math.min(...v1), bad1=Math.max(...v1);
+  let good2=Math.min(...v2), bad2=Math.max(...v2);
+  /* チームハンデ: つくか(コース全体HDCP<=差) / 良い方 or 悪い方(交互) */
+  const applies = diff>0 && hdcp<=diff;
+  const app = !applies?null:bgTarget;   // "best"=ロー対決, "gross"=ハイ対決
+  if(app==="best"&&recv){ if(recv===1)good1-=1; else good2-=1; }
+  if(app==="gross"&&recv){ if(recv===1)bad1-=1; else bad2-=1; }
+  const m1 = good1<good2?1:good1>good2?-1:0;  /* ロー（良いスコア）同士 */
+  const m2 = bad1<bad2?1:bad1>bad2?-1:0;      /* ハイ（悪いスコア）同士 */
   return {m1,m2};
 }
 /* ラスベガス: ネットで2桁（小が十の位）。ネット＝4人の最少HCP基準（差分をHDCP順に引く）。
@@ -209,7 +211,12 @@ function computeAll(st){
   const {team1,team2}=determineTeams(players,teamPairing);
   const thcp=calcTeamHcp(players,team1,team2);
   const isTen = game==="tentwo";
-  const activeHalves = HALF_DEFS.filter(hd=>halfConfig[hd.id]);
+  /* ワンハーフ（4ハーフ目を回らない）と決めた場合、3ハーフ目を2ptにする */
+  const half4Active = !!halfConfig.half4;
+  const activeHalves = HALF_DEFS.filter(hd=>halfConfig[hd.id]).map(hd=>{
+    if(hd.id==="half3" && !half4Active) return {...hd, pt:2};
+    return hd;
+  });
 
   const zero=()=>({A:0,B:0,C:0,D:0});
   const cntBirdie=zero(),cntBest=zero(),cntImo=zero();
@@ -218,13 +225,15 @@ function computeAll(st){
   const pairHoleWins={}; /* halfId -> pairKey -> array of 1/-1/0 */
   const halves={};
 
-  /* チームハンデのベスト・グロス交互は、その日のスタートから通しで連続する
-     （ハーフをまたいでもリセットしない。2ラウンド目も1ラウンド目の続き）。
-     アクティブなハーフを順に、実際に回る順でハンデ付きホールを数え、
-     ベスト・グロス・ベスト・グロス...と割り当てる。 */
+  /* チームハンデのベスト・グロス交互は、ラウンド内で回る順に連続するが、
+     2ラウンド目（ハーフ3・4）は新しい1ラウンドとしてリセットし、また最初のハンデホールから数え直す。
+     （1ラウンド目=ハーフ1+2 を通し、2ラウンド目=ハーフ3+4 を別に通し） */
   const bgTargetAll={}; // key: hd.id+"_"+hole
-  { let cnt=0;
+  const roundOf=(hid)=> (hid==="half1"||hid==="half2") ? 1 : 2;
+  { let cnt=0, curRound=null;
     activeHalves.forEach(hd=>{
+      const r=roundOf(hd.id);
+      if(r!==curRound){ cnt=0; curRound=r; }  // ラウンドが変わったらリセット
       const ct=halfConfig[hd.id];
       const ch = ct==="OUT"?COURSE.OUT:COURSE.IN;
       ch.forEach(h=>{
@@ -278,7 +287,7 @@ function computeAll(st){
       }
       /* チーム戦 */
       teamRes[h.hole] = teamMode==="highlow"
-        ? teamHoleHL(g,team1,team2,players,h.hdcp)
+        ? teamHoleHL(g,team1,team2,thcp.diff,h.hdcp,bgTarget[h.hole],thcp.recv)
         : teamHoleBG(g,team1,team2,thcp.diff,h.hdcp,bgTarget[h.hole],thcp.recv);
       /* ラスベガス */
       if(isTen){
@@ -303,12 +312,12 @@ function computeAll(st){
           pairHoleWins[hd.id][key].push(null);
         }
       });
-      /* 自分(A) vs 他3人 の当ホールネット差 */
+      /* 自分(A) vs 他3人 の当ホールネット差（打数基準: 自分が少なく打って勝ち=マイナス表示） */
       const va={};
       ["B","C","D"].forEach(o=>{
         if(g.A!==undefined&&g[o]!==undefined){
           const [nA,nO]=pairNets(g.A,g[o],hcps.A,hcps[o],h.hdcp);
-          va[o]=nO-nA; /* 正=自分勝ち */
+          va[o]=nA-nO; /* 負=自分が少ない(勝ち), 正=自分が多い(負け) */
         }
       });
       vsA[h.hole]=va;
@@ -387,8 +396,10 @@ function computeAll(st){
       halfMoney[hd.id]={type:"lunch",loser:loseT,winner:winT};
     } else {
       const yen = hd.id==="half1" ? (parseInt(rates.half1.yen)||0) : (parseInt(rates[hd.id])||0);
-      winT.forEach(pk=>teamMoney[pk]+=yen*loseT.length);
-      loseT.forEach(pk=>teamMoney[pk]-=yen*winT.length);
+      /* 1人あたり定額: 負けチームの各自がyen払い、勝ちチームの各自がyenもらう
+         （人数が同じ2対2なので合計はゼロ） */
+      winT.forEach(pk=>teamMoney[pk]+=yen);
+      loseT.forEach(pk=>teamMoney[pk]-=yen);
       halfMoney[hd.id]={type:"money",yen,loser:loseT,winner:winT};
     }
   });
@@ -611,7 +622,7 @@ function GolfNassau(){
       {/* ヘッダー */}
       <div style={{textAlign:"center",padding:"14px 8px 8px"}}>
         <div style={{fontSize:20,fontWeight:"bold",color:"#d4af37",letterSpacing:2}}>⛳ TGC BET CALCULATOR</div>
-        <div style={{fontSize:11,color:"#a8c4b0",marginTop:2}}>東京ゴルフ倶楽部 ／ {GAME_DEFS[game].label} ／ {teamMode==="highlow"?"ハイ&ロー":"ベスト&グロス"} <span style={{color:"#6b8f78"}}>v3.1</span></div>
+        <div style={{fontSize:11,color:"#a8c4b0",marginTop:2}}>東京ゴルフ倶楽部 ／ {GAME_DEFS[game].label} ／ {teamMode==="highlow"?"ハイ&ロー":"ベスト&グロス"} <span style={{color:"#6b8f78"}}>v3.8</span></div>
         {lastSaved&&<div style={{fontSize:10,color:"#86efac",marginTop:2}}>✓ 自動保存: {lastSaved}</div>}
         {msg&&<div style={{fontSize:12,color:"#d4af37",marginTop:4,fontWeight:"bold"}}>{msg}</div>}
         <div style={{display:"flex",justifyContent:"center",gap:0,marginTop:8}}>
@@ -661,7 +672,7 @@ function GolfNassau(){
             <span style={{color:"#38bdf8",fontWeight:"bold"}}>青セル=ベスト</span>
             {isTen&&<>／<span style={{color:"#c084fc",fontWeight:"bold"}}>紫セル=イモ</span></>}<br/>
             相手マスの右上○×ー=自分との個人戦／右下+1=自分がもらう・−1=与える<br/>
-            チーム○=自分のチームの勝ち{isTen&&"／ベガス列=自分の±点"}｜備考欄は横スクロール→
+            チーム○=自分のチームの勝ち{isTen&&"／ベガス列=自分の±点／vs列=打数差(−が自分アンダー=勝ち)"}｜備考欄は横スクロール→
           </div>
 
           {/* 各ハーフのスコアカード */}
@@ -743,7 +754,7 @@ function GolfNassau(){
                               let vsMark=null, hcMark=null;
                               if(pk!=="A"){
                                 const va=(hr.vsA[h.hole]||{})[pk];
-                                if(va!==undefined) vsMark = va>0?{t:"○",c:"#4ade80"}:va<0?{t:"×",c:"#f87171"}:{t:"ー",c:"#94a3b8"};
+                                if(va!==undefined) vsMark = va<0?{t:"○",c:"#4ade80"}:va>0?{t:"×",c:"#f87171"}:{t:"ー",c:"#94a3b8"};
                                 const hA=parseInt(players.A.hcp)||0, hO=parseInt(players[pk].hcp)||0;
                                 if(hA>hO){ const s=strokesForHole(hA-hO,h.hdcp); if(s>0) hcMark={t:"+"+s,c:"#4ade80"}; }
                                 else if(hO>hA){ const s=strokesForHole(hO-hA,h.hdcp); if(s>0) hcMark={t:"−"+s,c:"#fbbf24"}; }
@@ -775,7 +786,7 @@ function GolfNassau(){
                               const v=va[o];
                               return (
                                 <td key={o} style={{...cellSt,fontSize:12,fontWeight:"bold",
-                                  color:v===undefined?"#3f5a48":v>0?"#4ade80":v<0?"#f87171":"#94a3b8"}}>
+                                  color:v===undefined?"#3f5a48":v<0?"#4ade80":v>0?"#f87171":"#94a3b8"}}>
                                   {v===undefined?"":sgn(v)}
                                 </td>
                               );
@@ -807,7 +818,7 @@ function GolfNassau(){
                           },0);
                           return (
                             <td key={o} style={{...cellSt,fontSize:12,fontWeight:"bold",
-                              color:st>0?"#4ade80":st<0?"#f87171":"#94a3b8"}}>{sgn(st)}</td>
+                              color:st<0?"#4ade80":st>0?"#f87171":"#94a3b8"}}>{sgn(st)}</td>
                           );
                         })}
                       </tr>
@@ -1035,7 +1046,7 @@ function GolfNassau(){
                     合計 T1:{side.w1} - T2:{side.w2} →
                     <strong style={{color:K(side.winner),marginLeft:4}}>{side.winner===1?"T1勝":side.winner===-1?"T2勝":"引分"}</strong>
                     {hm&&hm.type==="lunch"&&<span style={{marginLeft:8}}>🍱 負け（{hm.loser.map(nm).join("・")}）がランチ奢り</span>}
-                    {hm&&hm.type==="money"&&<span style={{marginLeft:8}}>💴 負け各自→勝ち各自 ¥{hm.yen.toLocaleString()}</span>}
+                    {hm&&hm.type==="money"&&<span style={{marginLeft:8}}>💴 負け各自 −¥{hm.yen.toLocaleString()} / 勝ち各自 +¥{hm.yen.toLocaleString()}</span>}
                   </div>
                 </div>
               );
@@ -1117,7 +1128,7 @@ function GolfNassau(){
               <button onClick={()=>setTeamMode("bestgross")} style={selBtn(teamMode==="bestgross")}>ベスト&グロス</button>
               <button onClick={()=>setTeamMode("highlow")} style={selBtn(teamMode==="highlow")}>ハイ&ロー</button>
             </div>
-            <p style={noteSt}>ハイ&ロー＝両チームのロー同士・ハイ同士が個人HCP差ネットで対戦。</p>
+            <p style={noteSt}>ハイ&ロー＝各ホールの素のグロスで、両チームのロー（良いスコア）同士・ハイ（悪いスコア）同士が対戦。チームハンデ（HCP合計差）はロー・ハイの対決に交互につく。</p>
           </Card>
           <Card title="👥 プレーヤー（1人目=自分）">
             {PLAYER_KEYS.map(pk=>(
@@ -1160,7 +1171,7 @@ function GolfNassau(){
               <div style={{fontSize:12,color:"#a8c4b0"}}>{halfConfig.half2}（ハーフ1と自動連動）</div>
             </div>
             <div style={{marginBottom:8}}>
-              <div style={{fontSize:12,color:"#d4af37",marginBottom:4}}>ハーフ3（1pt・2ラウンド目）</div>
+              <div style={{fontSize:12,color:"#d4af37",marginBottom:4}}>ハーフ3（{halfConfig.half4?"1pt":"2pt"}・2ラウンド目）</div>
               {halfConfig.half3?(
                 <div style={{display:"flex",gap:6,alignItems:"center"}}>
                   <button onClick={()=>setHalf3("OUT")} style={selBtn(halfConfig.half3==="OUT")}>OUT</button>
@@ -1184,7 +1195,7 @@ function GolfNassau(){
                 )}
               </div>
             )}
-            <p style={noteSt}>2ラウンド目（ハーフ3+4）は「18ホールをもう1周」として、1ラウンド目と同じポイント構成（1pt/2pt/18H計1pt）。</p>
+            <p style={noteSt}>2ラウンド目（ハーフ3+4）は「18ホールをもう1周」として、1ラウンド目と同じポイント構成（1pt/2pt/18H計1pt）。ハーフ4を回らない（ワンハーフ）場合は、ハーフ3が2ptになります。</p>
           </Card>
           <Card title="💾 データ">
             <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center"}}>
